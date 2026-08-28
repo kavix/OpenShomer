@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ OpenShomer
+# OpenShomer
 
 **An open-source agentic security engineer that investigates security findings, generates minimal fixes, validates them, and creates evidence-backed pull requests.**
 
