@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
@@ -41,7 +41,7 @@ class Finding(BaseModel):
     issue: str = Field(..., description="Summary of the vulnerability")
     repository: str = Field(..., description="Repository or project name")
     status: FindingStatus = Field(default=FindingStatus.INGESTED, description="Current workflow status")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
