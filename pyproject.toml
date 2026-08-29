@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "OpenShomer Maintainers", email = "maintainers@openshomer.org"}
+    {name = "OpenShomer Maintainers", email = "kavix@yahoo.com"}
 ]
 keywords = ["security", "ai-agents", "llm-security", "mcp", "prompt-injection", "red-teaming"]
 
