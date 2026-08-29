@@ -18,31 +18,52 @@ jobs:
 
     # Trigger if:
     # 1. Label 'lgtm' or '/lgtm' was added to a PR
-    # 2. Or a comment containing '/lgtm' or 'lgtm' was posted on a PR by an authorized contributor/owner
+    # 2. Or a comment containing 'lgtm', '/lgtm', '#lgtm', 'LGTM', 'LGTM!', 'lgtm!' was posted on a PR
     if: >
       (github.event_name == 'pull_request' && (github.event.label.name == 'lgtm' || github.event.label.name == '/lgtm')) ||
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request && (contains(github.event.comment.body, '/lgtm') || contains(github.event.comment.body, 'LGTM')))
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && (
+        contains(github.event.comment.body, '/lgtm') ||
+        contains(github.event.comment.body, '#lgtm') ||
+        contains(github.event.comment.body, 'lgtm') ||
+        contains(github.event.comment.body, 'LGTM')
+      ))
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Determine PR Number & Merge Method
+      - name: Determine PR Number & Verify Command
         id: pr_info
         uses: actions/github-script@v7
         with:
           script: |
             let prNumber;
+            let isValidTrigger = false;
+
             if (context.eventName === 'pull_request') {
               prNumber = context.payload.pull_request.number;
+              isValidTrigger = true;
             } else if (context.eventName === 'issue_comment') {
               prNumber = context.payload.issue.number;
+              const comment = context.payload.comment.body.trim();
+              
+              // Match /lgtm, #lgtm, lgtm, LGTM, lgtm!, LGTM! with word boundaries or punctuation
+              const lgtmRegex = /(?:^|\s)(?:\/|#)?lgtm(?:!|\b)/i;
+              isValidTrigger = lgtmRegex.test(comment);
             }
 
+            if (!isValidTrigger) {
+              console.log('Comment does not match valid LGTM trigger pattern. Skipping auto-merge.');
+              core.setOutput('should_merge', 'false');
+              return;
+            }
+
+            core.setOutput('should_merge', 'true');
             core.setOutput('pr_number', prNumber);
             console.log(`Processing auto-merge for PR #${prNumber}`);
 
       - name: Auto-Merge Pull Request
+        if: steps.pr_info.outputs.should_merge == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -75,17 +96,17 @@ jobs:
                 pull_number: prNumber,
                 merge_method: 'squash',
                 commit_title: `${pr.title} (#${prNumber})`,
-                commit_message: `Auto-merged by OpenShomer LGTM Bot upon '/lgtm' approval.`
+                commit_message: `Auto-merged by OpenShomer Bot upon LGTM approval.`
               });
 
               console.log(`Merge response:`, mergeResponse.data);
 
-              // 3. Post confirmation comment
+              // 3. Post confirmation comment (professional tone, no emojis)
               await github.rest.issues.createComment({
                 owner,
                 repo,
                 issue_number: prNumber,
-                body: `🤖 **OpenShomer LGTM Bot:** Successfully auto-merged PR #${prNumber} via squash merge! 🎉`
+                body: `**OpenShomer Bot:** Pull request #${prNumber} has been merged successfully via squash merge.`
               });
 
             } catch (error) {
@@ -95,6 +116,6 @@ jobs:
                 owner,
                 repo,
                 issue_number: prNumber,
-                body: `⚠️ **OpenShomer LGTM Bot:** Could not auto-merge this PR. Reason:\n\`\`\`\n${error.message}\n\`\`\`\nPlease check merge conflicts or branch protection rules.`
+                body: `**OpenShomer Bot:** Unable to auto-merge pull request #${prNumber}. Reason:\n\n\`\`\`\n${error.message}\n\`\`\`\nPlease verify whether tests passed, merge conflicts exist, or branch protection requirements are met.`
               });
             }
