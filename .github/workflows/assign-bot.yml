@@ -1,0 +1,96 @@
+name: Assign Bot
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  assign:
+    name: Handle Assign / Unassign Command
+    runs-on: ubuntu-latest
+
+    # Only run if comment starts with or contains assign/unassign slash commands
+    if: >
+      contains(github.event.comment.body, '/assign') ||
+      contains(github.event.comment.body, '/unassign') ||
+      contains(github.event.comment.body, '/claim') ||
+      contains(github.event.comment.body, '/take')
+
+    steps:
+      - name: Process Assignment Command
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const comment = context.payload.comment.body.trim();
+            const commenter = context.payload.comment.user.login;
+            const issueNumber = context.payload.issue.number;
+            const isPR = Boolean(context.payload.issue.pull_request);
+            const { owner, repo } = context.repo;
+
+            // Regex patterns
+            const assignMatch = comment.match(/(?:\/assign|\/claim|\/take)(?:\s+@?([\w-]+(?:,\s*@?[\w-]+)*))?/i);
+            const unassignMatch = comment.match(/\/unassign(?:\s+@?([\w-]+(?:,\s*@?[\w-]+)*))?/i);
+
+            try {
+              if (assignMatch) {
+                let assignees = [];
+                if (assignMatch[1]) {
+                  // Specific users provided: e.g. /assign @kavix
+                  assignees = assignMatch[1].split(/[\s,]+/).map(u => u.replace(/^@/, '').trim()).filter(Boolean);
+                } else {
+                  // Default to commenter
+                  assignees = [commenter];
+                }
+
+                console.log(`Assigning [${assignees.join(', ')}] to #${issueNumber}`);
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  assignees: assignees
+                });
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: `👉 Assigned to @${assignees.join(', @')}! Thank you for contributing to OpenShomer. 🚀`
+                });
+
+              } else if (unassignMatch) {
+                let unassignees = [];
+                if (unassignMatch[1]) {
+                  unassignees = unassignMatch[1].split(/[\s,]+/).map(u => u.replace(/^@/, '').trim()).filter(Boolean);
+                } else {
+                  unassignees = [commenter];
+                }
+
+                console.log(`Unassigning [${unassignees.join(', ')}] from #${issueNumber}`);
+                await github.rest.issues.removeAssignees({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  assignees: unassignees
+                });
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: `👋 Unassigned @${unassignees.join(', @')} from this ${isPR ? 'pull request' : 'issue'}.`
+                });
+              }
+            } catch (error) {
+              core.setFailed(`Failed to execute assignment command: ${error.message}`);
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: `⚠️ **OpenShomer Assign Bot:** Unable to complete assignment.\n\`\`\`\n${error.message}\n\`\`\`\n*(Note: Users must have accepted repository invitation or interacted with the repository to be assigned).*`
+              });
+            }
