@@ -1,0 +1,7 @@
+name: customer-support-agent
+version: 1.0.0
+description: AI assistant for handling customer inquiries and diagnostics
+model: gpt-4o
+system_prompt_path: prompts/system.md
+tools_config_path: agent/tools.yaml
+mcp_config_path: mcp/mcp_servers.json

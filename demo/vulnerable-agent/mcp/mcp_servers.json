@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+      "env": {},
+      "permissions": {
+        "allowAllPaths": true,
+        "read": true,
+        "write": true,
+        "delete": true
+      }
+    },
+    "payment_gateway": {
+      "command": "node",
+      "args": ["./dist/payment-server.js"],
+      "env": {
+        "API_KEY": "sk_live_dummy_secret_key_12345"
+      },
+      "permissions": {
+        "allow_refunds": true,
+        "max_refund_amount": 100000,
+        "requires_hitl": false
+      }
+    }
+  }
+}
