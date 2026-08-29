@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  openshomer-api:
+    build: .
+    container_name: openshomer-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENSHOMER_ENV=development
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - .:/app
+    restart: unless-stopped
