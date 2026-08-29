@@ -260,6 +260,7 @@ OpenShomer/
 ├── Dockerfile & docker-compose.yml
 ├── Makefile                     # Developer commands (make test, make run)
 ├── pyproject.toml
+├── uv.lock
 ├── CONTRIBUTING.md              # Contributor guidelines
 ├── CODE_OF_CONDUCT.md           # Contributor Covenant Code of Conduct
 ├── SECURITY.md                  # Security and coordinated disclosure policy
@@ -271,22 +272,24 @@ OpenShomer/
 
 ## Quick Start
 
+Install [uv](https://docs.astral.sh/uv/) first (`curl -LsSf https://astral.sh/uv/install.sh | sh`, `brew install uv`, or `winget install astral-sh.uv`).
+
 ```bash
 # Clone the repository
 git clone https://github.com/kavix/OpenShomer.git
 cd OpenShomer
 
-# Set up Python virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# Install dependencies
+make install
 
 # Run test suite
-pytest -v
+make test
 
 # Start OpenShomer API
-uvicorn app.main:app --reload
+make run
 ```
+
+Without Make: `uv sync`, `uv run pytest -v`, and `uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
 
 The API will be available at `http://localhost:8000` with interactive Swagger docs at `http://localhost:8000/docs`.
 
