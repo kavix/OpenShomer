@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openshomer"
+version = "0.1.0"
+description = "Autonomous Agentic Security Engineer for LLM system prompts, agent configs, tool definitions, and MCP servers"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "OpenShomer Maintainers", email = "kavix@yahoo.com"}
+]
+keywords = ["security", "ai-agents", "llm-security", "mcp", "prompt-injection", "red-teaming"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "demo/vulnerable-agent/tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
