@@ -101,6 +101,7 @@ graph TD
 ```
 
 > 📖 **Full Documentation:**
+> - [How It Works (Simple Guide)](docs/HOW_IT_WORKS.md)
 > - [Use Cases & Flow Diagrams](docs/USE_CASES.md)
 > - [Deep Technical Architecture](docs/ARCHITECTURE.md)
 

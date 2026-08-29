@@ -1,0 +1,100 @@
+name: LGTM Auto-Merge Bot
+
+on:
+  pull_request:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  automerge:
+    name: Auto-merge PR on LGTM
+    runs-on: ubuntu-latest
+
+    # Trigger if:
+    # 1. Label 'lgtm' or '/lgtm' was added to a PR
+    # 2. Or a comment containing '/lgtm' or 'lgtm' was posted on a PR by an authorized contributor/owner
+    if: >
+      (github.event_name == 'pull_request' && (github.event.label.name == 'lgtm' || github.event.label.name == '/lgtm')) ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && (contains(github.event.comment.body, '/lgtm') || contains(github.event.comment.body, 'LGTM')))
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Determine PR Number & Merge Method
+        id: pr_info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let prNumber;
+            if (context.eventName === 'pull_request') {
+              prNumber = context.payload.pull_request.number;
+            } else if (context.eventName === 'issue_comment') {
+              prNumber = context.payload.issue.number;
+            }
+
+            core.setOutput('pr_number', prNumber);
+            console.log(`Processing auto-merge for PR #${prNumber}`);
+
+      - name: Auto-Merge Pull Request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.pr_info.outputs.pr_number }}', 10);
+            const { owner, repo } = context.repo;
+
+            try {
+              // 1. Fetch PR details
+              const { data: pr } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber
+              });
+
+              if (pr.merged) {
+                console.log(`PR #${prNumber} is already merged.`);
+                return;
+              }
+
+              if (pr.state !== 'open') {
+                console.log(`PR #${prNumber} is not open (state: ${pr.state}).`);
+                return;
+              }
+
+              // 2. Perform merge
+              const mergeResponse = await github.rest.pulls.merge({
+                owner,
+                repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+                commit_title: `${pr.title} (#${prNumber})`,
+                commit_message: `Auto-merged by OpenShomer LGTM Bot upon '/lgtm' approval.`
+              });
+
+              console.log(`Merge response:`, mergeResponse.data);
+
+              // 3. Post confirmation comment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `🤖 **OpenShomer LGTM Bot:** Successfully auto-merged PR #${prNumber} via squash merge! 🎉`
+              });
+
+            } catch (error) {
+              core.setFailed(`Failed to auto-merge PR #${prNumber}: ${error.message}`);
+              
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `⚠️ **OpenShomer LGTM Bot:** Could not auto-merge this PR. Reason:\n\`\`\`\n${error.message}\n\`\`\`\nPlease check merge conflicts or branch protection rules.`
+              });
+            }
