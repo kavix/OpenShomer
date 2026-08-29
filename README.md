@@ -260,7 +260,6 @@ OpenShomer/
 ├── docs/
 │   ├── ARCHITECTURE.md              # Technical architecture & state machine diagrams
 │   ├── USE_CASES.md                 # Use cases, sequences, and threat models
-
 ├── redteam/
 │   └── suites/                      # Adversarial test suites for prompt injection & tool abuse
 ├── tests/                           # Automated test suites
