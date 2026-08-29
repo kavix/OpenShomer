@@ -225,45 +225,58 @@ Result: APPROVED FOR PR
 ```
 OpenShomer/
 ├── .github/
-│   ├── workflows/ci.yml         # CI workflow running automated test matrix
-│   ├── PULL_REQUEST_TEMPLATE.md # Standard PR submission checklist
-│   └── ISSUE_TEMPLATE/          # Bug & feature request templates
+│   ├── workflows/
+│   │   ├── assign-bot.yml           # Auto-assign reviewers
+│   │   ├── lgtm-automerge.yml       # Auto-merge on LGTM
+│   │   ├── welcome-bot.yml          # Welcome new contributors
+│   │   ├── labeler.yml              # Auto-label PRs
+│   │   ├── stale.yml                # Stale issue/PR management
+│   │   ├── help-bot.yml             # Help request bot
+│   │   └── ci.yml                   # CI workflow running automated test matrix
+│   ├── PULL_REQUEST_TEMPLATE.md     # Standard PR submission checklist
+│   └── ISSUE_TEMPLATE/              # Bug & feature request templates
 ├── app/
 │   ├── api/
-│   │   └── findings.py          # REST endpoints (Ingest, Investigate, Remediate, Validate, Resolve)
+│   │   └── findings.py              # REST endpoints (Ingest, Investigate, Remediate, Validate, Resolve)
 │   ├── models/
-│   │   └── findings.py          # Pydantic schemas (Finding, Severity, InvestigationResult, etc.)
+│   │   └── findings.py              # Pydantic schemas (Finding, Severity, InvestigationResult, etc.)
 │   ├── agents/
-│   │   ├── tools.py             # Read-only repo tools (read_file, search_code, list_tools)
-│   │   ├── investigator.py      # Deep prompt/tool/MCP investigation agent
-│   │   ├── remediation.py       # Minimal safe rewrite generator
+│   │   ├── tools.py                 # Read-only repo tools (read_file, search_code, list_tools)
+│   │   ├── investigator.py          # Deep prompt/tool/MCP investigation agent
+│   │   ├── remediation.py           # Minimal safe rewrite generator
 │   │   └── schemas.py
 │   ├── validation/
-│   │   ├── guardrails.py        # Scope, size, and permission reduction checks
-│   │   ├── static.py            # Static policy inspection
-│   │   ├── redteam.py           # Adversarial test runner
-│   │   └── sandbox.py           # Isolated sandbox execution runner
+│   │   ├── guardrails.py            # Scope, size, and permission reduction checks
+│   │   ├── static.py                # Static policy inspection
+│   │   ├── redteam.py               # Adversarial test runner
+│   │   └── sandbox.py               # Isolated sandbox execution runner
 │   ├── github/
-│   │   ├── branches.py          # Git branch creator
-│   │   ├── commits.py           # Git staging and commit manager
-│   │   └── pull_requests.py     # Evidence-backed PR generator
-│   └── main.py                  # FastAPI application entrypoint
+│   │   ├── branches.py              # Git branch creator
+│   │   ├── commits.py               # Git staging and commit manager
+│   │   └── pull_requests.py         # Evidence-backed PR generator
+│   └── main.py                      # FastAPI application entrypoint
 ├── demo/
-│   └── vulnerable-agent/        # Vulnerable demo target fixture
+│   └── vulnerable-agent/            # Vulnerable demo target fixture
 ├── docs/
-│   ├── ARCHITECTURE.md          # Technical architecture & state machine diagrams
-│   └── USE_CASES.md             # Use cases, sequences, and threat models
+│   ├── ARCHITECTURE.md              # Technical architecture & state machine diagrams
+│   ├── USE_CASES.md                 # Use cases, sequences, and threat models
+│   └── wiki/                        # In-repo documentation
+│       ├── Home.md
+│       ├── Architecture.md
+│       ├── Roadmap.md
+│       ├── Developer-Setup.md
+│       └── Threat-Model.md
 ├── redteam/
-│   └── suites/                  # Adversarial test suites for prompt injection & tool abuse
-├── tests/                       # Automated test suites
+│   └── suites/                      # Adversarial test suites for prompt injection & tool abuse
+├── tests/                           # Automated test suites
 ├── .env.example
 ├── Dockerfile & docker-compose.yml
-├── Makefile                     # Developer commands (make test, make run)
+├── Makefile                         # Developer commands (make test, make run)
 ├── pyproject.toml
 ├── uv.lock
-├── CONTRIBUTING.md              # Contributor guidelines
-├── CODE_OF_CONDUCT.md           # Contributor Covenant Code of Conduct
-├── SECURITY.md                  # Security and coordinated disclosure policy
+├── CONTRIBUTING.md                  # Contributor guidelines
+├── CODE_OF_CONDUCT.md               # Contributor Covenant Code of Conduct
+├── SECURITY.md                      # Security and coordinated disclosure policy
 ├── LICENSE
 └── README.md
 ```
@@ -288,6 +301,16 @@ make test
 # Start OpenShomer API
 make run
 ```
+## Supported LLM Providers
+
+OpenShomer supports the following LLM providers:
+
+- Anthropic
+- Gemini
+- OpenAI
+- Mistral AI
+- NVIDIA NIM
+
 
 Without Make: `uv sync`, `uv run pytest -v`, and `uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
 
