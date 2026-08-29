@@ -72,6 +72,38 @@ graph LR
     style GM fill:#f3e8fd,stroke:#a142f4
 ```
 
+### Core Use Cases Overview
+
+```mermaid
+graph TD
+    subgraph ACTORS["Key Actors & Triggers"]
+        Dev["AI Agent Developer"]
+        Sec["AppSec Engineer / Security Lead"]
+        CI["CI/CD Pipeline / PR Webhook"]
+    end
+
+    subgraph USECASES["OpenShomer Core Use Cases"]
+        UC1["UC-1: Over-Permissioned Tools & Shell Access"]
+        UC2["UC-2: Prompt Injection & Instruction Overriding"]
+        UC3["UC-3: MCP Server Permission Scoping"]
+        UC4["UC-4: Missing Human-in-the-Loop (HITL) Gates"]
+        UC5["UC-5: Hardcoded Secrets in System Prompts/Configs"]
+    end
+
+    Dev -->|Configures Agent| UC1
+    Dev -->|Authors Prompts| UC2
+    Dev -->|Attaches MCPs| UC3
+    Sec -->|Audit & Compliance| UC4
+    CI -->|Runs Pull Request Check| UC5
+
+    style ACTORS fill:#e8f0fe,stroke:#4285f4
+    style USECASES fill:#e6f4ea,stroke:#34a853
+```
+
+> 📖 **Full Documentation:**
+> - [Use Cases & Flow Diagrams](docs/USE_CASES.md)
+> - [Deep Technical Architecture](docs/ARCHITECTURE.md)
+
 ---
 
 ## Why OpenShomer?
@@ -187,43 +219,56 @@ Result: APPROVED FOR PR
 
 ---
 
-## Project Structure (MVP)
+## Project Structure
 
 ```
 OpenShomer/
+├── .github/
+│   ├── workflows/ci.yml         # CI workflow running automated test matrix
+│   ├── PULL_REQUEST_TEMPLATE.md # Standard PR submission checklist
+│   └── ISSUE_TEMPLATE/          # Bug & feature request templates
 ├── app/
 │   ├── api/
-│   │   ├── findings.py
-│   │   └── repositories.py
-│   ├── agents/
-│   │   ├── investigator.py
-│   │   └── remediation.py
-│   ├── validation/
-│   │   ├── static.py
-│   │   ├── redteam.py
-│   │   └── sandbox.py
-│   ├── github/
-│   │   ├── branches.py
-│   │   ├── commits.py
-│   │   └── pull_requests.py
+│   │   └── findings.py          # REST endpoints (Ingest, Investigate, Remediate, Validate, Resolve)
 │   ├── models/
-│   │   └── findings.py
-│   └── main.py
-├── redteam/
-│   └── suites/                  # Adversarial test cases
+│   │   └── findings.py          # Pydantic schemas (Finding, Severity, InvestigationResult, etc.)
+│   ├── agents/
+│   │   ├── tools.py             # Read-only repo tools (read_file, search_code, list_tools)
+│   │   ├── investigator.py      # Deep prompt/tool/MCP investigation agent
+│   │   ├── remediation.py       # Minimal safe rewrite generator
+│   │   └── schemas.py
+│   ├── validation/
+│   │   ├── guardrails.py        # Scope, size, and permission reduction checks
+│   │   ├── static.py            # Static policy inspection
+│   │   ├── redteam.py           # Adversarial test runner
+│   │   └── sandbox.py           # Isolated sandbox execution runner
+│   ├── github/
+│   │   ├── branches.py          # Git branch creator
+│   │   ├── commits.py           # Git staging and commit manager
+│   │   └── pull_requests.py     # Evidence-backed PR generator
+│   └── main.py                  # FastAPI application entrypoint
 ├── demo/
-│   └── vulnerable-agent/        # Sample risky agent for testing
-├── docker/
-│   └── sandbox/
-├── tests/
-├── requirements.txt
-├── docker-compose.yml
+│   └── vulnerable-agent/        # Vulnerable demo target fixture
+├── docs/
+│   ├── ARCHITECTURE.md          # Technical architecture & state machine diagrams
+│   └── USE_CASES.md             # Use cases, sequences, and threat models
+├── redteam/
+│   └── suites/                  # Adversarial test suites for prompt injection & tool abuse
+├── tests/                       # Automated test suites
+├── .env.example
+├── Dockerfile & docker-compose.yml
+├── Makefile                     # Developer commands (make test, make run)
+├── pyproject.toml
+├── CONTRIBUTING.md              # Contributor guidelines
+├── CODE_OF_CONDUCT.md           # Contributor Covenant Code of Conduct
+├── SECURITY.md                  # Security and coordinated disclosure policy
+├── LICENSE
 └── README.md
 ```
 
 ---
 
-## Quick Start (Planned)
+## Quick Start
 
 ```bash
 # Clone the repository
@@ -231,9 +276,12 @@ git clone https://github.com/kavix/OpenShomer.git
 cd OpenShomer
 
 # Set up Python virtual environment
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+
+# Run test suite
+pytest -v
 
 # Start OpenShomer API
 uvicorn app.main:app --reload
@@ -255,24 +303,11 @@ The API will be available at `http://localhost:8000` with interactive Swagger do
 
 ---
 
-## What OpenShomer Is Not
+## Contributing & Community
 
-- **Not another passive scanner** that creates issue spam without fixes
-- **Not a general-purpose coding agent**
-- **Not an in-flight runtime proxy or firewall** (that sits at the runtime layer)
-- **Not a replacement for human security review**
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for guidelines on how to get involved.
 
-OpenShomer is the autonomous remediation engineer between **"a risky agent config was detected"** and **"a verified, minimal, reviewable fix exists."**
-
----
-
-## Contributing
-
-Contributions are welcome! Suggested areas to start:
-- New detection rules for agent configuration vulnerabilities
-- Red-team prompt injection and tool-abuse test suites
-- Support for emerging MCP server and tool manifest standards
-- Investigation tools and minimal rewrite strategies
+For security vulnerabilities, please refer to our [Security Policy](SECURITY.md).
 
 ---
 
