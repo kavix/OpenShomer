@@ -1,0 +1,36 @@
+name: Stale Issue & PR Manager
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Manage Stale Issues and PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Stale Items
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'pinned,security,proposal,help wanted'
+          exempt-pr-labels: 'pinned,security,in-progress'
+          stale-issue-message: >
+            **OpenShomer Bot:** This issue has had no activity for 30 days and has been marked as stale.
+            If this issue is still relevant, please comment or push updates, otherwise it will be closed in 7 days.
+          stale-pr-message: >
+            **OpenShomer Bot:** This pull request has had no activity for 30 days and has been marked as stale.
+            If this pull request is still active, please update your branch or leave a comment, otherwise it will be closed in 7 days.
+          close-issue-message: >
+            **OpenShomer Bot:** This issue has been automatically closed due to inactivity. Feel free to reopen or create a new issue if needed.
+          close-pr-message: >
+            **OpenShomer Bot:** This pull request has been automatically closed due to inactivity. Feel free to reopen if you wish to continue work on this.
