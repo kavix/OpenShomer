@@ -1,14 +1,13 @@
 .PHONY: install test lint run docker-build docker-run clean
 
 install:
-	python3 -m venv .venv
-	. .venv/bin/activate && pip install -r requirements.txt
+	uv sync
 
 test:
-	. .venv/bin/activate && pytest -v
+	uv run pytest -v
 
 run:
-	. .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 docker-build:
 	docker build -t openshomer:latest .

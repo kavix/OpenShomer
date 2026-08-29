@@ -13,7 +13,7 @@
 - [ ] Updated CI/CD / Docker Configs
 
 ### Verification & Testing
-- [ ] `pytest -v` passes locally with all tests green
+- [ ] `make test` / `uv run pytest -v` passes locally with all tests green
 - [ ] Verified guardrails and sandbox validation
 - [ ] Verified adherence to OpenShomer security constraints
 

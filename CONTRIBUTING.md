@@ -6,22 +6,38 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 
 ## 🛠️ Development Setup
 
-1. **Clone the repository:**
+1. **Install [uv](https://docs.astral.sh/uv/)** (if you do not already have it):
+
+   ```bash
+   # macOS / Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+
+   # macOS (Homebrew)
+   brew install uv
+
+   # Windows
+   winget install astral-sh.uv
+   ```
+
+2. **Clone the repository:**
    ```bash
    git clone https://github.com/kavix/OpenShomer.git
    cd OpenShomer
    ```
 
-2. **Create a virtual environment:**
+3. **Install dependencies and run the suite:**
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
+   make install
+   make test
+   make run
    ```
 
-3. **Run the test suite:**
+   Without Make, the same steps are:
+
    ```bash
-   pytest -v
+   uv sync
+   uv run pytest -v
+   uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 ---
@@ -38,7 +54,7 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 ## 📋 Pull Request Guidelines
 
 1. Create a feature branch (`git checkout -b feat/your-feature-name`).
-2. Ensure all tests pass (`pytest`).
+2. Ensure all tests pass (`make test` or `uv run pytest -v`).
 3. Commit with clear, descriptive messages following [Conventional Commits](https://www.conventionalcommits.org/).
 4. Push your branch and open a PR with the PR template checklist completed.
 
