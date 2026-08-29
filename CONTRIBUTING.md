@@ -60,6 +60,21 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 
 ---
 
+## 🤖 GitHub Bot Commands
+
+OpenShomer includes automated workflow bots to streamline issue assignment and pull request reviews:
+
+| Command | Action | Example |
+|---|---|---|
+| `/assign`, `#assign`, `/take`, `#take`, `/claim`, `#claim` | Assign issue/PR to yourself or specified user | `/assign` or `/assign @username` |
+| `/unassign`, `#unassign`, `/release`, `#release`, `/drop`, `#drop` | Unassign issue/PR from yourself or specified user | `/unassign` or `/unassign @username` |
+| `/lgtm`, `lgtm`, `LGTM`, `LGTM!`, `lgtm!`, `#lgtm` | Auto-merge an approved pull request via squash merge | `/lgtm` or `LGTM!` |
+| `/help`, `#help`, `/commands` | Display list of repository commands and helpful links | `/help` |
+| `/docs`, `#docs` | Display quick reference links to documentation | `/docs` |
+
+---
+
 ## 📜 Code of Conduct
 
 Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all project interactions.
+

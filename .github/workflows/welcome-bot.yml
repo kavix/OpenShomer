@@ -1,0 +1,34 @@
+name: Welcome Bot
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    name: Greet First-Time Contributor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome First-Time Contributor
+        uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            **OpenShomer Bot:** Thank you for opening your first issue in OpenShomer.
+
+            - Please make sure to include reproduction steps and environment details if reporting a bug.
+            - Review our [Contributing Guide](https://github.com/kavix/OpenShomer/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/kavix/OpenShomer/blob/main/CODE_OF_CONDUCT.md).
+            - A maintainer will review your issue shortly.
+          pr-message: |
+            **OpenShomer Bot:** Thank you for opening your first pull request in OpenShomer.
+
+            - Please ensure all tests pass locally (`uv run pytest -v` or `make test`).
+            - Verify your commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
+            - Fill out the checklist in the pull request description.
+            - A maintainer will review your contribution shortly.

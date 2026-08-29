@@ -1,0 +1,53 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - 'docs/**'
+          - 'LICENSE'
+
+ci-cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+
+core-api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/api/**'
+          - 'app/main.py'
+          - 'app/models/**'
+
+agents:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/agents/**'
+
+validation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/validation/**'
+
+github-integration:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/github/**'
+
+redteam:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'redteam/**'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'tests/**'
+          - 'demo/**'
+
+tooling:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'pyproject.toml'
+          - 'uv.lock'
+          - 'Makefile'
+          - 'Dockerfile'
+          - 'docker-compose.yml'
