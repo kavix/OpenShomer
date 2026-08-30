@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 import pytest
 from typer.testing import CliRunner
@@ -12,6 +12,7 @@ def test_cli_help():
     assert result.exit_code == 0
     assert "OpenShomer" in result.stdout
     assert "scan" in result.stdout
+    assert "fix" in result.stdout
     assert "version" in result.stdout
 
 
@@ -57,3 +58,16 @@ def test_cli_scan_json_output():
     assert "OVER_PERMISSIONED_TOOL" in finding_types
     assert any(f["file"] == "agent/tools.yaml" for f in findings)
     assert any(f["tool"] == "run_shell" for f in findings)
+
+
+def test_cli_fix_clean_workspace(tmp_path):
+    result = runner.invoke(app, ["fix", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "No security vulnerabilities detected" in result.stdout
+
+
+def test_cli_fix_demo_vulnerable_agent():
+    result = runner.invoke(app, ["fix", "demo/vulnerable-agent"])
+    assert result.exit_code == 0
+    assert "OpenShomer Autonomous Remediation Engine" in result.stdout
+    assert "SHOMER-001" in result.stdout

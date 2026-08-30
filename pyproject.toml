@@ -44,3 +44,10 @@ package = false
 testpaths = ["tests", "demo/vulnerable-agent/tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.yaml", "*.yml", "*.md"]
+

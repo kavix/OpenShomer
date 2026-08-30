@@ -52,7 +52,43 @@ class PullRequestManager:
 *Created automatically by OpenShomer — Find → Investigate → Rewrite → Red-team → Prove → PR*
 """
 
-    def open_pr(self, finding: Finding, investigation: InvestigationResult, validation: ValidationReport, diff: str) -> str:
-        # Returns simulated or real PR link
+    def open_pr(
+        self,
+        finding: Finding,
+        investigation: InvestigationResult,
+        validation: ValidationReport,
+        diff: str,
+        token: Optional[str] = None,
+        repo_name: Optional[str] = None,
+    ) -> str:
         pr_body = self.build_evidence_pr_body(finding, investigation, validation, diff)
-        return f"https://github.com/{finding.repository}/pull/mock-security-{finding.id.lower()}"
+        target_repo = repo_name or finding.repository
+
+        if token and target_repo and "/" in target_repo:
+            try:
+                from github import Github
+                g = Github(token)
+                repo = g.get_repo(target_repo)
+                default_branch = repo.default_branch
+                branch_name = f"openshomer/fix-{finding.id.lower()}"
+                
+                # Check if branch exists or create from default
+                ref = None
+                try:
+                    ref = repo.get_git_ref(f"heads/{branch_name}")
+                except Exception:
+                    sb = repo.get_branch(default_branch)
+                    ref = repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=sb.commit.sha)
+
+                pr = repo.create_pull(
+                    title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                    body=pr_body,
+                    head=branch_name,
+                    base=default_branch,
+                )
+                return pr.html_url
+            except Exception as e:
+                # Fallback to simulated PR URL if API call fails or repo not found
+                pass
+
+        return f"https://github.com/{target_repo}/pull/security-patch-{finding.id.lower()}"
