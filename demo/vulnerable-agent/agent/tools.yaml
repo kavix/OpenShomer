@@ -1,20 +1,2 @@
-tools:
-  - name: run_shell
-    description: Execute arbitrary shell commands for server diagnostics
-    permissions:
-      - "shell:unrestricted"
-      - "fs:write_all"
-    requires_approval: false
-    allowed_prefixes: []
-
-  - name: execute_sql
-    description: Query customer database
-    permissions:
-      - "db:read_write_unrestricted"
-    requires_approval: false
-
-  - name: view_user_account
-    description: Retrieve user account details
-    permissions:
-      - "account:read"
-    requires_approval: false
+- shell:restricted
+    requires_approval: true
