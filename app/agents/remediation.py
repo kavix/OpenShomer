@@ -56,13 +56,20 @@ class RemediationEngine:
 
     def _rewrite_file_content(self, filename: str, content: str, finding_type: FindingType) -> str:
         from app.qoder.diff_synthesizer import DiffSynthesizer
-        if filename.endswith("tools.yaml") or filename.endswith("tools.yml"):
+        from app.qoder.ide import QoderIDE
+
+        ide = QoderIDE(self.workspace_root)
+        res = ide.generate_remediation_diff(filename)
+        if res.get("rewritten_content"):
+            return res["rewritten_content"]
+
+        if filename.endswith(("tools.yaml", "tools.yml")):
             rewritten, _ = DiffSynthesizer.synthesize_tool_yaml(content)
             return rewritten
         elif filename.endswith("mcp_servers.json"):
             rewritten, _ = DiffSynthesizer.synthesize_mcp_json(content)
             return rewritten
-        elif filename.endswith("system.md") or filename.endswith(".prompt"):
+        elif filename.endswith(("system.md", ".prompt")) or "prompt" in filename:
             rewritten, _ = DiffSynthesizer.synthesize_prompt_fence(content, filename=filename)
             return rewritten
         return content
