@@ -295,6 +295,29 @@ make test
 # Start OpenShomer API
 make run
 ```
+
+### Model Context Protocol (MCP) Server
+
+Connect OpenShomer directly to **Claude Desktop**, **Claude Code**, **Cursor**, or **Windsurf** to audit agent prompts and configurations in real time.
+
+#### Claude Desktop Configuration (`claude_desktop_config.json`)
+
+```json
+{
+  "mcpServers": {
+    "openshomer": {
+      "command": "uvx",
+      "args": ["--from", "openshomer", "openshomer-mcp"]
+    }
+  }
+}
+```
+
+#### Exposed MCP Security Tools
+- `scan_agent_config(path)`: Scans agent codebase for tool permissions, missing approval gates, and prompt risks.
+- `redteam_prompt(prompt_text)`: Evaluates system prompts against 26 adversarial prompt injection & leak vectors.
+- `audit_mcp_config(config_json)`: Validates MCP server permissions and checks for hardcoded API keys.
+
 ## Supported LLM Providers
 
 OpenShomer supports the following LLM providers:
