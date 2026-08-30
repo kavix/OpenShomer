@@ -1,2 +1,22 @@
-- shell:restricted
-    requires_approval: true
+tools:
+- name: run_shell
+  description: Execute arbitrary shell commands for server diagnostics
+  permissions:
+  - shell:restricted
+  requires_approval: true
+  allowed_prefixes:
+  - ls
+  - cat
+  - grep
+  - echo
+  - pwd
+- name: execute_sql
+  description: Query customer database
+  permissions:
+  - db:read_only
+  requires_approval: true
+- name: view_user_account
+  description: Retrieve user account details
+  permissions:
+  - account:read
+  requires_approval: false
