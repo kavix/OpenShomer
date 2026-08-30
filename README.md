@@ -334,21 +334,20 @@ Connect OpenShomer directly to **Claude Desktop**, **Claude Code**, **Cursor**, 
 - `redteam_prompt(prompt_text)`: Evaluates system prompts against 26 adversarial prompt injection & leak vectors.
 - `audit_mcp_config(config_json)`: Validates MCP server permissions and checks for hardcoded API keys.
 
-### CLI Usage
+### Quick Start with CLI & TUI
 
 ```bash
-# Scan a local agent repository for security misconfigurations
-openshomer scan demo/vulnerable-agent
+# 1. Launch interactive SOC Terminal User Interface (TUI)
+openshomer tui
 
-# Output findings as machine-readable JSON for CI/CD gates
-openshomer scan demo/vulnerable-agent --json
+# 2. Or scan any local repository from the command line
+openshomer scan /path/to/target-agent-repo
 
-# Run autonomous remediation and open an evidence-backed Pull Request
-openshomer fix demo/vulnerable-agent --auto-pr
-
-# Run remediation powered by Alibaba Cloud Qwen reasoning
-openshomer fix demo/vulnerable-agent --provider alibaba --model qwen-plus --auto-pr
+# 3. Automatically remediate and open an evidence PR on GitHub
+openshomer auto-pr /path/to/target-agent-repo --repo owner/agent-repo
 ```
+
+> 📖 **Full TUI Guide**: See [docs/TUI_GUIDE.md](docs/TUI_GUIDE.md) for the complete terminal dashboard manual and keyboard shortcuts.
 
 ### GitHub Actions CI/CD Integration
 
