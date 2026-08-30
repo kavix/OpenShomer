@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openshomer"
-version = "0.1.0"
+version = "0.3.0"
 description = "Autonomous Agentic Security Engineer for LLM system prompts, agent configs, tool definitions, and MCP servers"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -41,7 +41,7 @@ dev = [
 ]
 
 [tool.uv]
-package = false
+package = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "demo/vulnerable-agent/tests"]
