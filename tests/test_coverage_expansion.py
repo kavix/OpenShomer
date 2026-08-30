@@ -1,19 +1,24 @@
 import json
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from app.models.security_db import SecurityBenchmarkDatabase
-from app.models.industrial_reports import IndustrialReportExporter
-from app.models.findings import Finding, FindingType, Severity, InvestigationResult, ValidationReport
-from app.github.pull_requests import PullRequestManager
+import pytest
+
+from app.agents.providers import GeminiProvider, OpenAIProvider
+from app.agents.tools import AgentRepoTools
+from app.fast_io import FastEngineSerializer
 from app.github.branches import BranchManager
 from app.github.commits import CommitManager
-from app.fast_io import FastEngineSerializer
-from app.agents.providers import OpenAIProvider, GeminiProvider, get_llm_provider
-from app.agents.tools import AgentRepoTools
+from app.github.pull_requests import PullRequestManager
+from app.models.findings import (
+    Finding,
+    FindingType,
+    InvestigationResult,
+    Severity,
+    ValidationReport,
+)
+from app.models.industrial_reports import IndustrialReportExporter
+from app.models.security_db import SecurityBenchmarkDatabase
 from app.qoder.diff_synthesizer import DiffSynthesizer
-from app.qoder.prompt_fencing import PromptFenceBuilder
 from app.tui import OpenShomerTextualApp
 
 

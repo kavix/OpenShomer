@@ -1,12 +1,9 @@
-import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
-
-from app.main import app
-from app.api.findings import FINDINGS_DB
-from app.models.findings import Finding, FindingType, Severity, FindingStatus
-from app.cli import scan_workspace, app as cli_app
 from typer.testing import CliRunner
+
+from app.api.findings import FINDINGS_DB
+from app.cli import app as cli_app
+from app.main import app
 
 client = TestClient(app)
 runner = CliRunner()
