@@ -18,7 +18,8 @@ def test_guardrails_reject_unauthorized_scope():
 def test_sandbox_validation_runs_suites():
     sandbox = SandboxRunner(Path("redteam"))
     report = sandbox.validate_in_sandbox(Path("demo/vulnerable-agent"), "SHOMER-001", "")
-    assert report.total_redteam_tests >= 3
+    assert report.total_redteam_tests >= 50
+    assert len(report.details) >= 50
 
 
 def test_static_checker_detects_owasp_prompt_and_tool_findings(tmp_path):
