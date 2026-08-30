@@ -168,7 +168,10 @@ def scan_workspace(workspace_root: Path) -> List[Finding]:
                         repository=workspace_root.name,
                     )
                 )
-                finding_idx += 1
+    # 4. v0.2 Richer Agent Graphs: Skill files, LangChain, LlamaIndex, and CrewAI
+    from app.frameworks import scan_all_agent_frameworks
+    framework_findings = scan_all_agent_frameworks(workspace_root)
+    findings.extend(framework_findings)
 
     return findings
 
