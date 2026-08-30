@@ -314,9 +314,9 @@ def mulerun_command(
     webhook_event: Optional[str] = typer.Option(None, "--event", help="Simulate a GitHub webhook event (push, pull_request)"),
     repo: str = typer.Option("owner/agent-repo", "--repo", help="Target repository identifier"),
 ) -> None:
-    """MuleRun: Low-latency (<100ms) automated AI security workflow runtime."""
+    """MuleRun: Automated AI security workflow runtime."""
     from app.mulerun.runtime import MuleRunRuntime
-    console.print("\n⚡ [bold cyan]MuleRun AI Workflow Runtime (<100ms Engine)[/bold cyan]\n")
+    console.print("\n⚡ [bold cyan]MuleRun AI Workflow Runtime[/bold cyan]\n")
     
     runtime = MuleRunRuntime()
     event_data = {
@@ -327,7 +327,7 @@ def mulerun_command(
     
     res = runtime.process_webhook_event(event_data)
     console.print(f"📥 [bold green]Webhook Processed:[/bold green] {res['event']} on [bold]{res['repository']}[/bold]")
-    console.print(f"⏱️ [bold yellow]Latency:[/bold yellow] {res['latency_ms']:.2f} ms (<100 ms target met)")
+    console.print(f"⏱️ [bold yellow]Latency:[/bold yellow] {res['latency_ms']:.2f} ms")
     console.print(f"📁 [bold]Affected Files:[/bold] {res['affected_files']}\n")
 
 

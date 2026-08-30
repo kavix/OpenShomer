@@ -238,9 +238,9 @@ OpenShomer/
 ├── app/
 │   ├── api/
 │   │   ├── findings.py              # REST endpoints (Ingest, Investigate, Remediate, Validate, Resolve)
-│   │   └── mulerun.py               # MuleRun webhook (<100ms) & live telemetry endpoints
+│   │   └── mulerun.py               # MuleRun webhook & live telemetry endpoints
 │   ├── mulerun/
-│   │   ├── runtime.py               # MuleRun AI workflow runtime (<100ms) & Qwen reasoning gateway
+│   │   ├── runtime.py               # MuleRun AI workflow runtime & Qwen reasoning gateway
 │   │   └── webhooks.py              # GitHub webhook HMAC-SHA256 ingress verifier
 │   ├── qoderwork/
 │   │   └── agent.py                 # QoderWork desktop agent (Trigger -> Investigate -> Action -> Resolved)

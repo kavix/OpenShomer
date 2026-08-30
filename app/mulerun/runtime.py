@@ -33,7 +33,7 @@ class MuleRunResult(BaseModel):
 
 
 class MuleRunRuntime:
-    """MuleRun: Low-latency (<100 ms) AI Workflow Runtime.
+    """MuleRun: Event-Driven AI Workflow Runtime.
     
     Orchestrates automated security workflows, connects Alibaba Cloud Qwen reasoning
     models, GitHub repository webhooks, and sandbox execution telemetry into a unified runtime.

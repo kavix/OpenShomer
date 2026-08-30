@@ -13,7 +13,7 @@ async def handle_github_webhook(
     x_github_event: str = Header(default="push"),
     x_hub_signature_256: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
-    """MuleRun low-latency GitHub webhook ingestion endpoint (<100ms)."""
+    """MuleRun GitHub webhook ingestion endpoint."""
     raw_body = await request.body()
     secret = os.getenv("GITHUB_WEBHOOK_SECRET", "")
 

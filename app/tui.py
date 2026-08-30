@@ -31,7 +31,7 @@ class OpenShomerTUI:
         banner_text.append("🛡️  OPENSHOMER ", style="bold cyan")
         banner_text.append("— Autonomous AI Agent Security Engineer\n", style="bold white")
         banner_text.append("   • Runtime: ", style="dim")
-        banner_text.append("MuleRun (<100ms)  ", style="bold yellow")
+        banner_text.append("MuleRun  ", style="bold yellow")
         banner_text.append("• Autonomous Loop: ", style="dim")
         banner_text.append("QoderWork  ", style="bold green")
         banner_text.append("• Precision IDE: ", style="dim")
@@ -139,7 +139,7 @@ class OpenShomerTUI:
             
             self.console.print("[bold]Select an action:[/bold]")
             self.console.print("  [bold cyan]1.[/bold cyan] 🔍 Scan Workspace for Security Vulnerabilities")
-            self.console.print("  [bold yellow]2.[/bold yellow] ⚡ Trigger MuleRun Low-Latency Ingress (<100ms)")
+            self.console.print("  [bold yellow]2.[/bold yellow] ⚡ Trigger MuleRun Automated Ingress")
             self.console.print("  [bold magenta]3.[/bold magenta] 🛠️  Synthesize Qoder Precision Diffs & Fences")
             self.console.print("  [bold green]4.[/bold green] 🤖 Run QoderWork Full Autonomous Security Loop")
             self.console.print("  [bold red]5.[/bold red] 🚪 Exit TUI\n")

@@ -7,7 +7,7 @@
 
 ## TL;DR
 
-> OpenShomer **v0.1 (Core Loop MVP)** and **v0.2 (Richer Agent Graphs)** are complete, tested (49 passing tests), built, and released. OpenShomer now features the **MuleRun** low-latency workflow runtime (<100ms), the **QoderWork** autonomous desktop security agent, the **Qoder** AI-native diff synthesizer, and full multi-framework support for **LangChain**, **LlamaIndex**, **CrewAI**, and **Agent Skill Files**.
+> OpenShomer **v0.1 (Core Loop MVP)** and **v0.2 (Richer Agent Graphs)** are complete, tested (49 passing tests), built, and released. OpenShomer now features the **MuleRun** AI workflow runtime, the **QoderWork** autonomous desktop security agent, the **Qoder** AI-native diff synthesizer, and full multi-framework support for **LangChain**, **LlamaIndex**, **CrewAI**, and **Agent Skill Files**.
 
 ---
 
@@ -23,7 +23,7 @@ OpenShomer is an autonomous AI-agent security engineer that closes the remediati
 * **Remediation Engine + Patch Guardrails**: Minimal safe rewrites with scope, size, permission reduction, and syntax validation.
 * **Validation Sandbox + Adversarial Red-Teaming**: 156-case adversarial red-team suite covering prompt injection and tool abuse.
 * **GitHub PR Automation**: Branch, commit, and evidence-backed PR generation with before/after security proof.
-* **MuleRun AI Workflow Runtime**: Low-latency (<100ms) event orchestrator, GitHub HMAC-SHA256 webhook ingress, Alibaba Cloud Qwen reasoning gateway, and live sandbox telemetry streaming.
+* **MuleRun AI Workflow Runtime**: Automated event orchestrator, GitHub HMAC-SHA256 webhook ingress, Alibaba Cloud Qwen reasoning gateway, and live sandbox telemetry streaming.
 * **QoderWork Desktop AI Agent**: Autonomous 4-stage lifecycle (`Trigger` → `Investigate` → `Action` → `Resolved`).
 * **Qoder Agentic IDE Backbone**: Precision AST/schema-aware diff synthesizer and defensive prompt fences.
 

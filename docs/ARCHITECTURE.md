@@ -8,8 +8,8 @@ This document provides a comprehensive technical breakdown of OpenShomer's archi
 
 ```mermaid
 graph TD
-    subgraph RUNTIME["1. Low-Latency Workflow Runtime (MuleRun)"]
-        MR["MuleRun Runtime Engine (<100 ms)<br/>app/mulerun/runtime.py"]
+    subgraph RUNTIME["1. Workflow Runtime (MuleRun)"]
+        MR["MuleRun Runtime Engine<br/>app/mulerun/runtime.py"]
         WH["GitHub Webhook Ingress (HMAC-SHA256)<br/>app/mulerun/webhooks.py"]
         QWEN["Alibaba Cloud Qwen Reasoning Gateway<br/>app/agents/providers.py"]
         TELEM["Live Sandbox Telemetry Streamer"]
