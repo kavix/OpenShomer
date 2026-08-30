@@ -12,6 +12,7 @@ from app.agents.remediation import RemediationEngine
 from app.agents.providers import get_llm_provider, LLMProvider
 from app.validation.sandbox import SandboxRunner
 from app.github.pull_requests import PullRequestManager
+from app.fast_io import FastEngineSerializer
 
 
 app = typer.Typer(
@@ -200,20 +201,20 @@ def scan_command(
     # Export industrial SARIF format
     if sarif:
         sarif_doc = IndustrialReportExporter.export_sarif(findings, workspace_path)
-        sarif.write_text(json.dumps(sarif_doc, indent=2), encoding="utf-8")
+        sarif.write_text(FastEngineSerializer.dumps(sarif_doc), encoding="utf-8")
         console.print(f"📄 [bold green]Exported Industrial SARIF v2.1.0 report to:[/bold green] {sarif}")
         return
 
     # Export CycloneDX AI Bill of Materials
     if aibom:
         bom_doc = IndustrialReportExporter.export_ai_bom(workspace_path, findings)
-        aibom.write_text(json.dumps(bom_doc, indent=2), encoding="utf-8")
+        aibom.write_text(FastEngineSerializer.dumps(bom_doc), encoding="utf-8")
         console.print(f"📦 [bold green]Exported CycloneDX AI Bill of Materials (AIBOM) to:[/bold green] {aibom}")
         return
 
     if json_output:
         results = [f.model_dump(mode="json") for f in findings]
-        typer.echo(json.dumps(results, indent=2))
+        typer.echo(FastEngineSerializer.dumps(results))
     else:
         if findings:
             table = Table(title="OpenShomer Security Findings", show_header=True, header_style="bold magenta")

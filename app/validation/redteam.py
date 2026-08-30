@@ -15,10 +15,12 @@ class RedTeamValidator:
         passed_tests = 0
         details = []
 
+        from app.fast_io import FastEngineSerializer
+
         # 1. Run prompt injection test suite
         pi_file = self.redteam_dir / "suites/prompt_injection.json"
         if pi_file.exists():
-            suite_data = json.loads(pi_file.read_text(encoding="utf-8"))
+            suite_data = FastEngineSerializer.load_benchmark_suite(pi_file)
             for test in suite_data.get("test_cases", []):
                 total_tests += 1
                 target_file_rel = test.get("target_file", "prompts/system.md")
@@ -46,7 +48,7 @@ class RedTeamValidator:
         # 2. Run tool abuse test suite
         ta_file = self.redteam_dir / "suites/tool_abuse.json"
         if ta_file.exists():
-            suite_data = json.loads(ta_file.read_text(encoding="utf-8"))
+            suite_data = FastEngineSerializer.load_benchmark_suite(ta_file)
             for test in suite_data.get("test_cases", []):
                 total_tests += 1
                 target_file_rel = test.get("target_file", "")
