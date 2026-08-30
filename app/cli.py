@@ -381,12 +381,22 @@ def qoder_command(
     console.print(result["diff"])
 
 
+@app.command(name="tui")
+def tui_command(
+    path: Path = typer.Argument(Path("."), help="Path to target agent workspace"),
+) -> None:
+    """Launch OpenShomer interactive Terminal User Interface (TUI)."""
+    from app.tui import launch_tui
+    launch_tui(workspace=path)
+
+
 @app.command(name="version")
 def version_command() -> None:
     """Print the OpenShomer version."""
-    console.print("OpenShomer CLI v0.1.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)")
+    console.print("OpenShomer CLI v0.2.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)")
 
 
 if __name__ == "__main__":
     app()
+
 

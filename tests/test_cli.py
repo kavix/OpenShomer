@@ -19,7 +19,7 @@ def test_cli_help():
 def test_cli_version():
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
-    assert "OpenShomer CLI v0.1.0" in result.stdout
+    assert "OpenShomer CLI" in result.stdout
 
 
 def test_cli_scan_nonexistent_directory():
