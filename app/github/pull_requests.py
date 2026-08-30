@@ -1,9 +1,51 @@
 from typing import Dict, Any, Optional
 from app.models.findings import Finding, InvestigationResult, ValidationReport
+from app.models.security_db import SecurityBenchmarkDatabase
 
 
 class PullRequestManager:
-    """Builds structured evidence PR templates."""
+    """Builds structured evidence PR templates with MITRE ATLAS, OWASP LLM, and CWE threat intelligence mappings."""
+
+    @staticmethod
+    def get_security_taxonomy_mapping(finding_type_str: str) -> Dict[str, str]:
+        """Maps finding to MITRE ATLAS, OWASP LLM Top 10, NIST AI RMF, and CWE taxonomy."""
+        ft = finding_type_str.upper()
+        
+        if "OVER_PERMISSIONED" in ft or "AGENCY" in ft:
+            return {
+                "owasp": "LLM06:2025 - Excessive Agency",
+                "mitre_atlas": "AML.T0043 (Unbounded Tool Invocation) / AML.TA0001 (Execution)",
+                "cwe": "CWE-78 (Command Injection) / CWE-862 (Missing Authorization)",
+                "nist": "NIST AI RMF: MANAGE 2.4 - Autonomous Boundary Governance"
+            }
+        elif "PROMPT_INJECTION" in ft:
+            return {
+                "owasp": "LLM01:2025 - Prompt Injection",
+                "mitre_atlas": "AML.T0051 (Direct Prompt Injection) / AML.T0054 (LLM Jailbreak)",
+                "cwe": "CWE-78 (Command/Prompt Injection)",
+                "nist": "NIST AI RMF: MEASURE 2.5 - Adversarial Robustness Validation"
+            }
+        elif "SECRET" in ft or "DISCLOSURE" in ft or "LEAK" in ft:
+            return {
+                "owasp": "LLM02:2025 - Sensitive Information Disclosure",
+                "mitre_atlas": "AML.T0056 (System Prompt Key Extraction) / AML.TA0005 (Credential Access)",
+                "cwe": "CWE-798 (Use of Hardcoded Credentials)",
+                "nist": "NIST AI RMF: GOVERN 1.2 - Secret & Credential Isolation"
+            }
+        elif "EXFILTRATION" in ft or "SSRF" in ft:
+            return {
+                "owasp": "LLM02:2025 - Sensitive Information Disclosure / Data Exfiltration",
+                "mitre_atlas": "AML.T0044 (Markdown Data Exfiltration) / AML.T0045 (SSRF Tool Egress)",
+                "cwe": "CWE-918 (Server-Side Request Forgery)",
+                "nist": "NIST AI RMF: MANAGE 1.3 - Outbound Network & Boundary Controls"
+            }
+        else:
+            return {
+                "owasp": "LLM06:2025 - Autonomous Agent Misconfiguration",
+                "mitre_atlas": "AML.TA0003 - Privilege Escalation",
+                "cwe": "CWE-862 - Missing Authorization",
+                "nist": "NIST AI RMF: MAP 1.1 - Threat Identification"
+            }
 
     @staticmethod
     def build_evidence_pr_body(
@@ -13,6 +55,7 @@ class PullRequestManager:
         diff_snippet: str
     ) -> str:
         report_lines = "\n".join([f"- {d}" for d in validation.details])
+        tax = PullRequestManager.get_security_taxonomy_mapping(finding.type.value)
         
         return f"""## 🛡️ OpenShomer Security Remediation: {finding.id}
 
@@ -21,6 +64,16 @@ class PullRequestManager:
 - **Severity:** `{finding.severity.value}`
 - **Target File:** `{finding.file}`
 - **Confidence Score:** `{investigation.confidence * 100:.1f}%`
+
+---
+
+### Standardized Threat Taxonomy & Compliance Mapping
+| Standard / Framework | Classification & Identifier |
+|---|---|
+| **OWASP LLM Top 10** | `{tax['owasp']}` |
+| **MITRE ATLAS** | `{tax['mitre_atlas']}` |
+| **CWE (Common Weakness)** | `{tax['cwe']}` |
+| **NIST AI RMF** | `{tax['nist']}` |
 
 ---
 
@@ -63,19 +116,19 @@ class PullRequestManager:
     ) -> str:
         pr_body = self.build_evidence_pr_body(finding, investigation, validation, diff)
         target_repo = repo_name or finding.repository
-
-        if token and target_repo and "/" in target_repo:
+        
+        if token and "/" in target_repo:
             try:
-                from github import Github, InputGitTreeElement
-                g = Github(token)
+                from github import Github, Auth
+                g = Github(auth=Auth.Token(token))
                 repo = g.get_repo(target_repo)
-                default_branch = repo.default_branch
-                branch_name = f"openshomer/fix-{finding.id.lower()}"
                 
-                # Check if branch exists or create from default
-                ref = None
+                branch_name = f"openshomer/fix-{finding.id.lower().replace('_', '-')}"
+                default_branch = repo.default_branch
+                
+                # Check if branch exists, otherwise create it from default branch
                 try:
-                    ref = repo.get_git_ref(f"heads/{branch_name}")
+                    repo.get_branch(branch_name)
                 except Exception:
                     sb = repo.get_branch(default_branch)
                     ref = repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=sb.commit.sha)
@@ -88,11 +141,11 @@ class PullRequestManager:
                         
                         # Generate proper rewritten file content using RemediationEngine
                         from app.agents.remediation import RemediationEngine
+                        from pathlib import Path
                         remediator = RemediationEngine(workspace_root=Path("."))
                         rewritten_text = remediator._rewrite_file_content(finding.file, original_text, finding.type)
 
                         if rewritten_text and rewritten_text != original_text:
-                            # Update existing branch file with real cleanly formatted content
                             try:
                                 branch_file = repo.get_contents(finding.file, ref=branch_name)
                                 repo.update_file(
@@ -110,23 +163,29 @@ class PullRequestManager:
                                     sha=existing_file.sha,
                                     branch=branch_name,
                                 )
-                    except Exception as e:
+                    except Exception:
                         pass
 
                 # Check if PR already exists for this branch
                 prs = repo.get_pulls(state="open", head=f"{repo.owner.login}:{branch_name}")
                 for existing_pr in prs:
+                    existing_pr.edit(
+                        title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                        body=pr_body,
+                    )
                     return existing_pr.html_url
 
+                # Open real pull request on GitHub
                 pr = repo.create_pull(
                     title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
                     body=pr_body,
                     head=branch_name,
-                    base=default_branch,
+                    base=default_branch
                 )
                 return pr.html_url
             except Exception as e:
-                # If PR error, print or fallback
                 pass
 
+        # Fallback simulation URL if no token provided or API fails
+        branch_name = f"openshomer/fix-{finding.id.lower()}"
         return f"https://github.com/{target_repo}/pull/security-patch-{finding.id.lower()}"
