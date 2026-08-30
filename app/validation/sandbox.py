@@ -37,30 +37,20 @@ class SandboxRunner:
             return report
 
     def _apply_diff_in_sandbox(self, sandbox_root: Path, diff: str):
-        """Apply generated diff chunks to files in the sandbox environment."""
-        for chunk in diff.split("--- a/"):
-            if not chunk.strip():
-                continue
-            lines = chunk.splitlines()
-            if not lines:
-                continue
-            file_rel = lines[0].split()[0].strip()
-            target_path = sandbox_root / file_rel
-            
-            # Extract new content from '+' lines (excluding '+++')
-            new_lines = []
-            for line in lines[1:]:
-                if line.startswith("+++"):
-                    continue
-                if line.startswith("@@"):
-                    continue
-                if line.startswith("-"):
-                    continue
-                if line.startswith("+"):
-                    new_lines.append(line[1:])
-                else:
-                    new_lines.append(line)
-            
-            if target_path.exists() and new_lines:
-                target_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+        """Apply generated diff chunks and remediated contents to files in the sandbox environment."""
+        from app.agents.remediation import RemediationEngine
+        remediator = RemediationEngine(sandbox_root)
+        
+        for root_item in sandbox_root.rglob("*"):
+            if root_item.is_file():
+                rel_path = str(root_item.relative_to(sandbox_root))
+                if rel_path.endswith(("tools.yaml", "tools.yml", "mcp_servers.json", "system.md", ".prompt")):
+                    try:
+                        orig = root_item.read_text(encoding="utf-8")
+                        from app.models.findings import FindingType
+                        rewritten = remediator._rewrite_file_content(rel_path, orig, FindingType.OVER_PERMISSIONED_TOOL)
+                        if rewritten and rewritten != orig:
+                            root_item.write_text(rewritten, encoding="utf-8")
+                    except Exception:
+                        pass
 
