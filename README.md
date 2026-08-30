@@ -318,6 +318,43 @@ Connect OpenShomer directly to **Claude Desktop**, **Claude Code**, **Cursor**, 
 - `redteam_prompt(prompt_text)`: Evaluates system prompts against 26 adversarial prompt injection & leak vectors.
 - `audit_mcp_config(config_json)`: Validates MCP server permissions and checks for hardcoded API keys.
 
+### CLI Usage
+
+```bash
+# Scan a local agent repository for security misconfigurations
+openshomer scan demo/vulnerable-agent
+
+# Output findings as machine-readable JSON for CI/CD gates
+openshomer scan demo/vulnerable-agent --json
+
+# Run autonomous remediation and open an evidence-backed Pull Request
+openshomer fix demo/vulnerable-agent --auto-pr
+```
+
+### GitHub Actions CI/CD Integration
+
+Add OpenShomer to `.github/workflows/agent-security.yml` to automatically scan every Pull Request:
+
+```yaml
+name: AI Agent Security Audit
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: OpenShomer Security Scan
+        uses: kavix/OpenShomer@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          scan_path: "."
+          exit_code: "true"
+```
+
 ## Supported LLM Providers
 
 OpenShomer supports the following LLM providers:

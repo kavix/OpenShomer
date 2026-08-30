@@ -1,0 +1,28 @@
+﻿name: OpenShomer Security Scanner & PR Remediation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  agent-security-audit:
+    name: Audit Agent Configurations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run OpenShomer Action
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          scan_path: "demo/vulnerable-agent"
+          exit_code: "false"
+          auto_pr: "false"

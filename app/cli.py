@@ -220,69 +220,69 @@ def scan_command(
         raise typer.Exit(code=1)
 
 
-@app.command(name="auto-pr")
-def auto_pr_command(
-    path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
-    repo_name: str = typer.Option("demo/vulnerable-agent", "--repo-name", help="GitHub repo name (e.g. owner/repo)"),
+@app.command(name="fix")
+def fix_command(
+    path: Path = typer.Argument(Path("."), help="Path to AI agent repository directory"),
+    auto_pr: bool = typer.Option(False, "--auto-pr", help="Automatically create GitHub PR if token available"),
+    github_token: Optional[str] = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
+    repo_name: Optional[str] = typer.Option(None, "--repo", "--repo-name", envvar="GITHUB_REPOSITORY", help="GitHub Repository (owner/repo)"),
+    redteam_dir: Optional[Path] = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
-    """Full autonomous pipeline: Scan -> Investigate -> Rewrite -> 150+ Red-Team Validation -> Evidence PR."""
+    """Investigate findings, synthesize safe diffs, validate in sandbox, and optionally open a PR."""
     workspace_path = path.resolve()
     if not workspace_path.exists() or not workspace_path.is_dir():
-        console.print(f"[red]Error: Directory '{workspace_path}' does not exist.[/red]")
+        console.print(f"[red]Error: Path '{workspace_path}' does not exist or is not a directory.[/red]")
         raise typer.Exit(code=2)
 
-    console.print("=" * 60)
-    console.print("[bold cyan]🛡️  OpenShomer Autonomous Security Engineer[/bold cyan]")
-    console.print(f"Target Repository: {workspace_path}")
-    console.print("=" * 60)
+    console.print(f"\n[bold cyan]OpenShomer Autonomous Remediation Engine[/bold cyan] targeting [bold]{workspace_path.name}[/bold]...\n")
 
     findings = scan_workspace(workspace_path)
     if not findings:
-        console.print("✅ [bold green]Zero security findings detected. Repository clean![/bold green]")
+        console.print("[bold green]No security vulnerabilities detected.[/bold green] Nothing to remediate.\n")
         return
 
-    console.print(f"\n⚠️  Discovered [bold red]{len(findings)}[/bold red] security finding(s):")
-    for f in findings:
-        console.print(f"   - [{f.severity.value}] {f.id} in {f.file}: {f.issue}")
-
-    redteam_dir = Path(__file__).resolve().parent.parent / "redteam"
+    rt_dir = redteam_dir.resolve() if redteam_dir else Path(__file__).resolve().parent.parent / "redteam"
     investigator = InvestigationAgent(workspace_path)
-    engine = RemediationEngine(workspace_path)
-    sandbox = SandboxRunner(redteam_dir)
+    remediator = RemediationEngine(workspace_path)
+    sandbox = SandboxRunner(rt_dir)
     pr_manager = PullRequestManager()
 
+    remediated_count = 0
     for finding in findings:
-        console.print("\n" + "-" * 60)
-        console.print(f"⚡ Processing Finding: [bold cyan]{finding.id}[/bold cyan] ({finding.type.value})")
-        console.print("-" * 60)
-
-        # Stage 2: Deep Investigation
-        console.print("🕵️  Stage 2: Investigating agent graph and prompt boundaries...")
+        console.print(f"-> Investigating [bold cyan]{finding.id}[/bold cyan] ({finding.type.value})...")
         investigation = investigator.investigate(finding)
-        console.print(f"   Root Cause: {investigation.root_cause}")
-        console.print(f"   Recommended Fix: {investigation.recommended_fix}")
 
-        # Stage 3: Minimal Safe Rewrite
-        console.print("\n🛠️  Stage 3: Generating minimal safe rewrite diff & evaluating guardrails...")
-        remediation = engine.remediate(investigation, finding.type)
+        console.print("   Generating scoped patch...")
+        remediation = remediator.remediate(investigation, finding.type)
+
         if not remediation.guardrails_passed:
-            console.print(f"❌ Remediation rejected by guardrails: {remediation.rejection_reason}")
+            console.print(f"   [red]Remediation rejected by guardrails: {remediation.rejection_reason}[/red]")
             continue
-        console.print("   ✅ Guardrails passed (scope & size limits respected).")
 
-        # Stage 4: Sandbox & Adversarial Red-Teaming
-        console.print("\n🧪 Stage 4: Validating in isolated sandbox across 150+ adversarial test cases...")
+        console.print("   Running 50+ adversarial red-team test cases in sandbox...")
         validation = sandbox.validate_in_sandbox(workspace_path, finding.id, remediation.diff)
-        console.print(f"   Static Checks: {'[green]PASSED[/green]' if validation.static_checks_passed else '[yellow]FLAGGED[/yellow]'}")
-        console.print(f"   Red-Team Tests: [bold cyan]{validation.passed_redteam_tests}/{validation.total_redteam_tests}[/bold cyan] passed")
 
-        # Stage 5: Evidence PR
         if validation.redteam_passed:
-            pr_url = pr_manager.open_pr(finding, investigation, validation, remediation.diff)
-            console.print(f"\n🎉 [bold green]Stage 5: Evidence-Backed Pull Request Created Successfully![/bold green]")
-            console.print(f"   🔗 PR URL: [bold blue]{pr_url}[/bold blue]")
+            remediated_count += 1
+            console.print(f"   [green]Passed sandbox validation! ({validation.passed_redteam_tests}/{validation.total_redteam_tests} tests)[/green]")
+            if auto_pr:
+                pr_url = pr_manager.open_pr(finding, investigation, validation, remediation.diff, token=github_token, repo_name=repo_name)
+                console.print(f"   [bold magenta]Opened PR:[/bold magenta] {pr_url}")
         else:
-            console.print("\n❌ Sandbox validation failed. PR will not be opened without full verification proof.")
+            console.print(f"   [red]Failed sandbox tests ({validation.passed_redteam_tests}/{validation.total_redteam_tests} passed)[/red]")
+
+    console.print(f"\n[bold green]Successfully validated {remediated_count}/{len(findings)} security remediations.[/bold green]\n")
+
+
+@app.command(name="auto-pr")
+def auto_pr_command(
+    path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
+    repo_name: Optional[str] = typer.Option(None, "--repo-name", "--repo", envvar="GITHUB_REPOSITORY", help="GitHub repo name (e.g. owner/repo)"),
+    github_token: Optional[str] = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
+    redteam_dir: Optional[Path] = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
+) -> None:
+    """Full autonomous pipeline: Scan -> Investigate -> Rewrite -> 150+ Red-Team Validation -> Evidence PR."""
+    fix_command(path=path, auto_pr=True, github_token=github_token, repo_name=repo_name, redteam_dir=redteam_dir)
 
 
 @app.command(name="version")
