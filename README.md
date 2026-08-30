@@ -101,6 +101,7 @@ graph TD
 ```
 
 - 📖 **[User & Setup Guide (PR & CI/CD Setup)](docs/USER_GUIDE.md)**
+- 🧠 **[Alibaba Cloud & Qwen Security Suite Guide](docs/ALIBABA_QWEN_GUIDE.md)**
 - 💻 **[Terminal User Interface (TUI) SOC Guide](docs/TUI_GUIDE.md)**
 - 🏗️ **[Architecture & Threat Model](docs/ARCHITECTURE.md)**
 - 📋 **[Use Cases & Scenarios](docs/USE_CASES.md)**
