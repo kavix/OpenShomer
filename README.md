@@ -100,10 +100,11 @@ graph TD
     style USECASES fill:#e6f4ea,stroke:#34a853
 ```
 
-> 📖 **Full Documentation:**
-> - [How It Works (Simple Guide)](docs/HOW_IT_WORKS.md)
-> - [Use Cases & Flow Diagrams](docs/USE_CASES.md)
-> - [Deep Technical Architecture](docs/ARCHITECTURE.md)
+- 📖 **[User & Setup Guide (PR & CI/CD Setup)](docs/USER_GUIDE.md)**
+- 💻 **[Terminal User Interface (TUI) SOC Guide](docs/TUI_GUIDE.md)**
+- 🏗️ **[Architecture & Threat Model](docs/ARCHITECTURE.md)**
+- 📋 **[Use Cases & Scenarios](docs/USE_CASES.md)**
+- 🗺️ **[Wiki Roadmap](docs/wiki/Roadmap.md)**
 
 ---
 
