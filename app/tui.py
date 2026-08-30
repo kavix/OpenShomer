@@ -132,6 +132,50 @@ class OpenShomerTUI:
         self.console.print(table)
         self.console.print(f"\n[bold]Final Status:[/bold] [bold green]{report.state}[/bold green] (Total Execution: {report.total_time_ms:.2f} ms)\n")
 
+    def run_auto_pr_view(self):
+        import os
+        from app.github.pull_requests import PullRequestManager
+        from app.agents.investigator import InvestigationAgent
+        from app.agents.remediation import RemediationEngine
+        from app.validation.sandbox import SandboxRunner
+        
+        self.console.print("\n[bold magenta]🚀 Automated Evidence-Backed PR Generator[/bold magenta]\n")
+        
+        findings = scan_workspace(self.workspace_root)
+        if not findings:
+            self.console.print("[green]Workspace is clean. Nothing to remediate or open PR for.[/green]")
+            return
+
+        token = os.getenv("GITHUB_TOKEN") or os.popen("gh auth token 2>/dev/null").read().strip()
+        repo_default = os.getenv("GITHUB_REPOSITORY", "kavix/OpenShomer")
+        target_repo = Prompt.ask("[bold]Enter GitHub repository (owner/repo)[/bold]", default=repo_default)
+
+        if not token:
+            token = Prompt.ask("[bold yellow]Enter GitHub Personal Access Token (or leave empty for preview)[/bold yellow]", default="")
+
+        investigator = InvestigationAgent(self.workspace_root)
+        remediator = RemediationEngine(self.workspace_root)
+        rt_dir = Path(__file__).resolve().parent.parent / "redteam"
+        sandbox = SandboxRunner(rt_dir)
+        pr_manager = PullRequestManager()
+
+        for finding in findings:
+            self.console.print(f"-> Investigating [bold cyan]{finding.id}[/bold cyan] ({finding.type.value})...")
+            inv = investigator.investigate(finding)
+            
+            self.console.print("   Synthesizing feature-preserving diff...")
+            remediation = remediator.remediate(inv, finding.type)
+            
+            self.console.print("   Executing 156 adversarial sandbox test cases...")
+            val = sandbox.validate_in_sandbox(self.workspace_root, finding.id, remediation.diff)
+            
+            if val.redteam_passed:
+                self.console.print(f"   [green]Passed sandbox validation! ({val.passed_redteam_tests}/{val.total_redteam_tests})[/green]")
+                pr_url = pr_manager.open_pr(finding, inv, val, remediation.diff, token=token or None, repo_name=target_repo)
+                self.console.print(Panel(f"🎉 [bold green]Pull Request Generated:[/bold green]\n[bold underline]{pr_url}[/bold underline]", border_style="green"))
+            else:
+                self.console.print(f"   [red]Sandbox validation failed for {finding.id}[/red]")
+
     def start_interactive_menu(self):
         while True:
             self.console.clear()
@@ -142,9 +186,10 @@ class OpenShomerTUI:
             self.console.print("  [bold yellow]2.[/bold yellow] ⚡ Trigger MuleRun Automated Ingress")
             self.console.print("  [bold magenta]3.[/bold magenta] 🛠️  Synthesize Qoder Precision Diffs & Fences")
             self.console.print("  [bold green]4.[/bold green] 🤖 Run QoderWork Full Autonomous Security Loop")
-            self.console.print("  [bold red]5.[/bold red] 🚪 Exit TUI\n")
+            self.console.print("  [bold blue]5.[/bold blue] 🚀 Remediate & Open Evidence PR on GitHub")
+            self.console.print("  [bold red]6.[/bold red] 🚪 Exit TUI\n")
 
-            choice = Prompt.ask("[bold]Enter choice (1-5)[/bold]", choices=["1", "2", "3", "4", "5"], default="1")
+            choice = Prompt.ask("[bold]Enter choice (1-6)[/bold]", choices=["1", "2", "3", "4", "5", "6"], default="1")
 
             if choice == "1":
                 self.run_scan_view()
@@ -155,6 +200,8 @@ class OpenShomerTUI:
             elif choice == "4":
                 self.run_qoderwork_autonomous_loop()
             elif choice == "5":
+                self.run_auto_pr_view()
+            elif choice == "6":
                 self.console.print("\n[bold cyan]Goodbye from OpenShomer![/bold cyan]\n")
                 break
 
@@ -164,3 +211,4 @@ class OpenShomerTUI:
 def launch_tui(workspace: Optional[Path] = None):
     tui = OpenShomerTUI(workspace_root=workspace)
     tui.start_interactive_menu()
+
