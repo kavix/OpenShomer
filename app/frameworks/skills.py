@@ -1,8 +1,6 @@
 import re
-import json
-import yaml
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+
 from app.models.findings import Finding, FindingType, Severity
 
 
@@ -10,7 +8,7 @@ class SkillFileScanner:
     """Scans and analyzes agent skill files (SKILL.md, skills/*.yaml) for security misconfigurations."""
 
     @classmethod
-    def scan_skills(cls, workspace_root: Path) -> List[Finding]:
+    def scan_skills(cls, workspace_root: Path) -> list[Finding]:
         findings = []
         finding_idx = 100
 

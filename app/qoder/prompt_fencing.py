@@ -1,5 +1,3 @@
-import re
-from typing import Optional, Dict, Any
 
 
 class PromptFenceBuilder:
@@ -18,7 +16,7 @@ class PromptFenceBuilder:
 """
 
     @classmethod
-    def apply_fence(cls, system_prompt: str, role_description: Optional[str] = None) -> str:
+    def apply_fence(cls, system_prompt: str, role_description: str | None = None) -> str:
         """Wrap system prompt in strict defensive prompt fences."""
         cleaned_prompt = system_prompt.strip()
         

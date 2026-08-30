@@ -1,12 +1,11 @@
 import subprocess
-from typing import List, Tuple
 
 
 class CommitManager:
     """Stages and commits patched files."""
 
     @staticmethod
-    def commit_patch(files: List[str], message: str, cwd: str) -> Tuple[bool, str]:
+    def commit_patch(files: list[str], message: str, cwd: str) -> tuple[bool, str]:
         try:
             for f in files:
                 subprocess.run(["git", "add", f], cwd=cwd, check=True)

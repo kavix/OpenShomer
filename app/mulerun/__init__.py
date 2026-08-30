@@ -1,3 +1,3 @@
-from app.mulerun.runtime import MuleRunRuntime, MuleRunResult, TelemetryEvent
+from app.mulerun.runtime import MuleRunResult, MuleRunRuntime, TelemetryEvent
 
-__all__ = ["MuleRunRuntime", "MuleRunResult", "TelemetryEvent"]
+__all__ = ["MuleRunResult", "MuleRunRuntime", "TelemetryEvent"]

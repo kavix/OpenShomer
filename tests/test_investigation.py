@@ -1,6 +1,8 @@
 from pathlib import Path
-from app.models.findings import Finding, FindingType, Severity
+
 from app.agents.investigator import InvestigationAgent
+from app.models.findings import Finding, FindingType, Severity
+
 
 def test_investigator_diagnoses_over_permissioned_tool():
     workspace = Path("demo/vulnerable-agent")

@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+
 from app.models.findings import Finding, FindingType, Severity
 
 
@@ -8,7 +8,7 @@ class LlamaIndexScanner:
     """Scans and analyzes LlamaIndex FunctionTools, ReActAgent, and QueryEngine tools."""
 
     @classmethod
-    def scan_llamaindex_agents(cls, workspace_root: Path) -> List[Finding]:
+    def scan_llamaindex_agents(cls, workspace_root: Path) -> list[Finding]:
         findings = []
         finding_idx = 300
 

@@ -1,10 +1,10 @@
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Tuple
+
 from app.models.findings import ValidationReport
-from app.validation.static import StaticPolicyChecker
 from app.validation.redteam import RedTeamValidator
+from app.validation.static import StaticPolicyChecker
 
 
 class SandboxRunner:

@@ -1,10 +1,11 @@
 import time
 import uuid
-import asyncio
-from typing import Dict, Any, List, Optional, Callable, Union
+from collections.abc import Callable
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from app.agents.providers import LLMProvider, get_llm_provider, AlibabaQwenProvider
+from app.agents.providers import AlibabaQwenProvider, LLMProvider, get_llm_provider
 from app.mulerun.webhooks import GitHubWebhookVerifier
 
 
@@ -13,13 +14,13 @@ class TelemetryEvent(BaseModel):
     timestamp: float = Field(default_factory=time.time)
     stage: str
     event_type: str
-    data: Dict[str, Any] = Field(default_factory=dict)
+    data: dict[str, Any] = Field(default_factory=dict)
     duration_ms: float = 0.0
 
 
 class WorkflowStepConfig(BaseModel):
     name: str
-    action: Optional[str] = None
+    action: str | None = None
     timeout_ms: float = 5000.0
 
 
@@ -27,8 +28,8 @@ class MuleRunResult(BaseModel):
     workflow_id: str
     status: str
     execution_time_ms: float
-    telemetry: List[TelemetryEvent] = Field(default_factory=list)
-    output: Dict[str, Any] = Field(default_factory=dict)
+    telemetry: list[TelemetryEvent] = Field(default_factory=list)
+    output: dict[str, Any] = Field(default_factory=dict)
     success: bool = True
 
 
@@ -39,10 +40,10 @@ class MuleRunRuntime:
     models, GitHub repository webhooks, and sandbox execution telemetry into a unified runtime.
     """
 
-    def __init__(self, llm_provider: Optional[LLMProvider] = None):
+    def __init__(self, llm_provider: LLMProvider | None = None):
         self.llm_provider = llm_provider or get_llm_provider()
-        self.telemetry_history: List[TelemetryEvent] = []
-        self._subscribers: List[Callable[[TelemetryEvent], None]] = []
+        self.telemetry_history: list[TelemetryEvent] = []
+        self._subscribers: list[Callable[[TelemetryEvent], None]] = []
 
     def subscribe_telemetry(self, callback: Callable[[TelemetryEvent], None]) -> None:
         """Register a real-time telemetry stream listener."""
@@ -52,7 +53,7 @@ class MuleRunRuntime:
         self,
         stage: str,
         event_type: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
         duration_ms: float = 0.0,
     ) -> TelemetryEvent:
         """Emit telemetry event to all subscribers and append to history."""
@@ -72,11 +73,11 @@ class MuleRunRuntime:
 
     def process_webhook_event(
         self,
-        webhook_payload: Dict[str, Any],
-        raw_bytes: Optional[bytes] = None,
-        secret: Optional[str] = None,
-        signature: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        webhook_payload: dict[str, Any],
+        raw_bytes: bytes | None = None,
+        secret: str | None = None,
+        signature: str | None = None,
+    ) -> dict[str, Any]:
         """Ingest and normalize a GitHub repository webhook event in < 10ms with HMAC security."""
         start_time = time.time()
         
@@ -103,7 +104,7 @@ class MuleRunRuntime:
             "sub_100ms": duration_ms < 100.0,
         }
 
-    def qwen_security_triage(self, finding_description: str) -> Dict[str, Any]:
+    def qwen_security_triage(self, finding_description: str) -> dict[str, Any]:
         """Connects directly to Alibaba Cloud Qwen reasoning model to triage threats."""
         start_time = time.time()
         triage_prompt = (
@@ -118,7 +119,7 @@ class MuleRunRuntime:
             else:
                 response_text = self.llm_provider.generate(triage_prompt) if self.llm_provider else "SEVERITY: HIGH - Unchecked execution."
         except Exception as e:
-            response_text = f"Fallback triage: HIGH ({str(e)})"
+            response_text = f"Fallback triage: HIGH ({e!s})"
 
         duration_ms = (time.time() - start_time) * 1000
         self.emit_telemetry(
@@ -136,14 +137,14 @@ class MuleRunRuntime:
     def execute_workflow(
         self,
         workflow_name: str,
-        steps: List[Callable[..., Any]],
-        context: Optional[Dict[str, Any]] = None,
+        steps: list[Callable[..., Any]],
+        context: dict[str, Any] | None = None,
     ) -> MuleRunResult:
         """Execute a low-latency sequential/parallel security workflow with live telemetry."""
         wf_id = f"wf-{uuid.uuid4().hex[:8]}"
         start_time = time.time()
         ctx = context or {}
-        telemetry: List[TelemetryEvent] = []
+        telemetry: list[TelemetryEvent] = []
 
         self.emit_telemetry(
             stage="workflow_start",

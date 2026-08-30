@@ -1,21 +1,19 @@
 import os
-import json
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
+
 import httpx
 
 
 class LLMProvider(ABC):
     """Abstract base class for LLM reasoning backbones in OpenShomer."""
 
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+    def __init__(self, api_key: str | None = None, model: str | None = None):
         self.api_key = api_key
         self.model = model
 
     @abstractmethod
-    def generate(self, prompt: str, system_prompt: Optional[str] = None, temperature: float = 0.2) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None, temperature: float = 0.2) -> str:
         """Synchronously generate a completion given a prompt and optional system prompt."""
-        pass
 
 
 class AlibabaQwenProvider(LLMProvider):
@@ -29,9 +27,9 @@ class AlibabaQwenProvider(LLMProvider):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        model: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        model: str | None = None,
+        base_url: str | None = None,
         timeout: float = 30.0,
     ):
         key = api_key or os.getenv("DASHSCOPE_API_KEY") or os.getenv("ALIBABA_CLOUD_API_KEY") or os.getenv("ALIBABA_API_KEY")
@@ -39,7 +37,7 @@ class AlibabaQwenProvider(LLMProvider):
         self.base_url = base_url or self.BASE_URL
         self.timeout = timeout
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None, temperature: float = 0.2) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None, temperature: float = 0.2) -> str:
         if not self.api_key:
             raise ValueError("Alibaba Cloud DashScope API key is required (set DASHSCOPE_API_KEY or ALIBABA_CLOUD_API_KEY).")
 
@@ -76,12 +74,12 @@ class OpenAIProvider(LLMProvider):
 
     DEFAULT_MODEL = "gpt-4o"
 
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, timeout: float = 30.0):
+    def __init__(self, api_key: str | None = None, model: str | None = None, timeout: float = 30.0):
         key = api_key or os.getenv("OPENAI_API_KEY")
         super().__init__(api_key=key, model=model or self.DEFAULT_MODEL)
         self.timeout = timeout
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None, temperature: float = 0.2) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None, temperature: float = 0.2) -> str:
         if not self.api_key:
             raise ValueError("OpenAI API key is required (set OPENAI_API_KEY).")
 
@@ -108,12 +106,12 @@ class GeminiProvider(LLMProvider):
 
     DEFAULT_MODEL = "gemini-1.5-flash"
 
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, timeout: float = 30.0):
+    def __init__(self, api_key: str | None = None, model: str | None = None, timeout: float = 30.0):
         key = api_key or os.getenv("GEMINI_API_KEY")
         super().__init__(api_key=key, model=model or self.DEFAULT_MODEL)
         self.timeout = timeout
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None, temperature: float = 0.2) -> str:
+    def generate(self, prompt: str, system_prompt: str | None = None, temperature: float = 0.2) -> str:
         if not self.api_key:
             raise ValueError("Gemini API key is required (set GEMINI_API_KEY).")
 
@@ -137,10 +135,10 @@ class GeminiProvider(LLMProvider):
 
 
 def get_llm_provider(
-    provider_name: Optional[str] = None,
-    model: Optional[str] = None,
-    api_key: Optional[str] = None,
-) -> Optional[LLMProvider]:
+    provider_name: str | None = None,
+    model: str | None = None,
+    api_key: str | None = None,
+) -> LLMProvider | None:
     """Auto-detects or initializes the requested LLM provider."""
     name = (provider_name or os.getenv("OPENSHOMER_LLM_PROVIDER", "")).lower()
 

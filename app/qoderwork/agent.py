@@ -1,30 +1,32 @@
 import time
-import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from app.models.findings import Finding, FindingType, Severity, InvestigationResult, RemediationResult
-from app.agents.providers import LLMProvider, get_llm_provider
 from app.agents.investigator import InvestigationAgent
+from app.agents.providers import LLMProvider, get_llm_provider
+from app.models.findings import (
+    InvestigationResult,
+)
+from app.mulerun.runtime import MuleRunRuntime
 from app.qoder.ide import QoderIDE
 from app.validation.sandbox import SandboxRunner
-from app.mulerun.runtime import MuleRunRuntime
 
 
 class QoderWorkStep(BaseModel):
     step_name: str
     status: str
-    details: Dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
     duration_ms: float = 0.0
 
 
 class QoderWorkLifecycleReport(BaseModel):
     workflow_id: str
     state: str  # Trigger -> Investigate -> Action -> Resolved (or Failed)
-    steps: List[QoderWorkStep] = Field(default_factory=list)
+    steps: list[QoderWorkStep] = Field(default_factory=list)
     findings_count: int = 0
-    patches_applied: List[str] = Field(default_factory=list)
+    patches_applied: list[str] = Field(default_factory=list)
     redteam_passed: bool = False
     resolved: bool = False
     total_time_ms: float = 0.0
@@ -40,9 +42,9 @@ class QoderWorkAgent:
     def __init__(
         self,
         workspace_root: Path,
-        llm_provider: Optional[LLMProvider] = None,
-        mulerun_runtime: Optional[MuleRunRuntime] = None,
-        redteam_dir: Optional[Path] = None,
+        llm_provider: LLMProvider | None = None,
+        mulerun_runtime: MuleRunRuntime | None = None,
+        redteam_dir: Path | None = None,
     ):
         self.workspace_root = Path(workspace_root)
         self.llm_provider = llm_provider or get_llm_provider()
@@ -56,7 +58,7 @@ class QoderWorkAgent:
         """Run the complete autonomous Trigger -> Investigate -> Action -> Resolved workflow."""
         start_time = time.time()
         wf_id = f"qw-{int(start_time)}"
-        steps: List[QoderWorkStep] = []
+        steps: list[QoderWorkStep] = []
 
         # ----------------------------------------------------
         # Stage 1: TRIGGER
@@ -90,7 +92,7 @@ class QoderWorkAgent:
         # Stage 2: INVESTIGATE
         # ----------------------------------------------------
         t0 = time.time()
-        investigations: List[InvestigationResult] = []
+        investigations: list[InvestigationResult] = []
         for finding in findings:
             inv = self.investigator.investigate(finding)
             investigations.append(inv)
@@ -108,8 +110,8 @@ class QoderWorkAgent:
         # Stage 3: ACTION (Synthesis)
         # ----------------------------------------------------
         t0 = time.time()
-        applied_patches: List[str] = []
-        full_diff_chunks: List[str] = []
+        applied_patches: list[str] = []
+        full_diff_chunks: list[str] = []
         files_to_remediate = set()
         for inv in investigations:
             for f in inv.affected_files:

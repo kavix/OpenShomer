@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any
 
 
 class SecurityBenchmarkDatabase:
@@ -14,7 +13,7 @@ class SecurityBenchmarkDatabase:
     TAXONOMY_FILE = Path(__file__).parent.parent.parent / "data/security_knowledge_base.json"
 
     @classmethod
-    def get_standardized_databases(cls) -> Dict[str, Any]:
+    def get_standardized_databases(cls) -> dict[str, Any]:
         return {
             "standards": [
                 {
@@ -76,7 +75,7 @@ class SecurityBenchmarkDatabase:
         }
 
     @classmethod
-    def load_or_init(cls) -> Dict[str, Any]:
+    def load_or_init(cls) -> dict[str, Any]:
         cls.TAXONOMY_FILE.parent.mkdir(parents=True, exist_ok=True)
         data = cls.get_standardized_databases()
         with open(cls.TAXONOMY_FILE, "w", encoding="utf-8") as f:

@@ -1,30 +1,28 @@
 import os
-import time
 from pathlib import Path
-from typing import List, Optional
 
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.binding import Binding
+from textual.containers import Horizontal, Vertical
 from textual.widgets import (
-    Header,
-    Footer,
     Button,
     DataTable,
-    Static,
+    Footer,
+    Header,
     Label,
     RichLog,
+    Static,
     TabbedContent,
     TabPane,
 )
-from textual.binding import Binding
 
-from app.cli import scan_workspace
-from app.mulerun.runtime import MuleRunRuntime
-from app.qoderwork.agent import QoderWorkAgent
-from app.qoder.ide import QoderIDE
-from app.github.pull_requests import PullRequestManager
 from app.agents.investigator import InvestigationAgent
 from app.agents.remediation import RemediationEngine
+from app.cli import scan_workspace
+from app.github.pull_requests import PullRequestManager
+from app.mulerun.runtime import MuleRunRuntime
+from app.qoder.ide import QoderIDE
+from app.qoderwork.agent import QoderWorkAgent
 from app.validation.sandbox import SandboxRunner
 
 
@@ -164,7 +162,7 @@ class OpenShomerTextualApp(App):
         Binding("p", "action_pr", "Open PR", show=True),
     ]
 
-    def __init__(self, workspace_root: Optional[Path] = None):
+    def __init__(self, workspace_root: Path | None = None):
         super().__init__()
         self.workspace_root = workspace_root or Path(".")
         self.mulerun = MuleRunRuntime()
@@ -353,7 +351,7 @@ class OpenShomerTextualApp(App):
             val = sandbox.validate_in_sandbox(self.workspace_root, finding.id, remediation.diff)
             
             if val.redteam_passed:
-                log.write(f"    [green][PASS][/green] Passed 156 adversarial tests in isolated container sandbox.")
+                log.write("    [green][PASS][/green] Passed 156 adversarial tests in isolated container sandbox.")
                 pr_url = pr_manager.open_pr(finding, inv, val, remediation.diff, token=token or None, repo_name=target_repo)
                 log.write(f"    [bold green][PR CREATED][/bold green] [underline]{pr_url}[/underline]\n")
                 self.update_status(f"Live Evidence PR Opened: {pr_url}")
@@ -361,6 +359,6 @@ class OpenShomerTextualApp(App):
                 log.write(f"    [red][FAIL][/red] Sandbox red-team validation failed for {finding.id}")
 
 
-def launch_tui(workspace: Optional[Path] = None):
+def launch_tui(workspace: Path | None = None):
     app = OpenShomerTextualApp(workspace_root=workspace)
     app.run()

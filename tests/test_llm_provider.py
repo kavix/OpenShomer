@@ -1,21 +1,19 @@
 import os
-import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
 from typer.testing import CliRunner
 
+from app.agents.investigator import InvestigationAgent
 from app.agents.providers import (
     AlibabaQwenProvider,
-    OpenAIProvider,
-    GeminiProvider,
-    get_llm_provider,
     LLMProvider,
+    OpenAIProvider,
+    get_llm_provider,
 )
-from app.agents.investigator import InvestigationAgent
 from app.agents.remediation import RemediationEngine
-from app.models.findings import Finding, FindingType, Severity
 from app.cli import app
+from app.models.findings import Finding, FindingType, Severity
 
 
 class MockProvider(LLMProvider):

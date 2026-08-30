@@ -1,4 +1,4 @@
 ﻿"""OpenShomer Model Context Protocol (MCP) Server package."""
-from app.mcp.server import mcp, main
+from app.mcp.server import main, mcp
 
-__all__ = ["mcp", "main"]
+__all__ = ["main", "mcp"]

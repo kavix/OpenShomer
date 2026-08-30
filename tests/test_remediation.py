@@ -1,6 +1,8 @@
 from pathlib import Path
-from app.models.findings import FindingType, Severity, InvestigationResult
+
 from app.agents.remediation import RemediationEngine
+from app.models.findings import FindingType, InvestigationResult, Severity
+
 
 def test_remediation_generates_safe_diff():
     workspace = Path("demo/vulnerable-agent")

@@ -1,31 +1,31 @@
-from fastapi import APIRouter, HTTPException, status
-from pathlib import Path
-from typing import Dict, List, Optional
 import os
+from pathlib import Path
 
-from app.models.findings import (
-    Finding,
-    FindingStatus,
-    FindingType,
-    Severity,
-    FindingReceipt,
-    InvestigationResult,
-    RemediationResult,
-    ValidationReport,
-    ResolutionResult
-)
+from fastapi import APIRouter, HTTPException, status
+
 from app.agents.investigator import InvestigationAgent
 from app.agents.remediation import RemediationEngine
-from app.validation.sandbox import SandboxRunner
 from app.github.pull_requests import PullRequestManager
+from app.models.findings import (
+    Finding,
+    FindingReceipt,
+    FindingStatus,
+    FindingType,
+    InvestigationResult,
+    RemediationResult,
+    ResolutionResult,
+    Severity,
+    ValidationReport,
+)
+from app.validation.sandbox import SandboxRunner
 
 router = APIRouter(prefix="/findings", tags=["findings"])
 
 # In-memory findings database for MVP
-FINDINGS_DB: Dict[str, Finding] = {}
-INVESTIGATIONS_DB: Dict[str, InvestigationResult] = {}
-REMEDIATIONS_DB: Dict[str, RemediationResult] = {}
-VALIDATIONS_DB: Dict[str, ValidationReport] = {}
+FINDINGS_DB: dict[str, Finding] = {}
+INVESTIGATIONS_DB: dict[str, InvestigationResult] = {}
+REMEDIATIONS_DB: dict[str, RemediationResult] = {}
+VALIDATIONS_DB: dict[str, ValidationReport] = {}
 
 def get_workspace_root() -> Path:
     # Default to demo fixture if in test or workspace root
@@ -49,12 +49,12 @@ def ingest_finding(finding: Finding) -> FindingReceipt:
     )
 
 
-@router.get("", response_model=List[Finding])
+@router.get("", response_model=list[Finding])
 def list_findings(
-    status: Optional[FindingStatus] = None,
-    severity: Optional[Severity] = None,
-    type: Optional[FindingType] = None
-) -> List[Finding]:
+    status: FindingStatus | None = None,
+    severity: Severity | None = None,
+    type: FindingType | None = None
+) -> list[Finding]:
     """List and browse all ingested findings with optional filters."""
     results = list(FINDINGS_DB.values())
     if status:

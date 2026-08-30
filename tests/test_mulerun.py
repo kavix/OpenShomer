@@ -1,11 +1,12 @@
-import hmac
 import hashlib
+import hmac
 import json
+
 from fastapi.testclient import TestClient
+
 from app.main import app
-from app.mulerun.runtime import MuleRunRuntime, TelemetryEvent
+from app.mulerun.runtime import MuleRunRuntime
 from app.mulerun.webhooks import GitHubWebhookVerifier
-from app.agents.providers import AlibabaQwenProvider
 
 
 def test_mulerun_webhook_processing_latency():

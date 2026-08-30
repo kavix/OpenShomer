@@ -1,8 +1,9 @@
 ﻿import json
-import sys
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
+
 from mcp.server.fastmcp import FastMCP
+
 from app.cli import scan_workspace
 
 mcp = FastMCP("OpenShomer")
@@ -36,7 +37,7 @@ def redteam_prompt(prompt_text: str) -> str:
     has_leaks = "sk_live_" in prompt_text or "api_key = " in prompt_text
     has_weak_delimiters = "---" in prompt_text and not has_boundary
 
-    vulnerabilities: List[str] = []
+    vulnerabilities: list[str] = []
     if has_leaks:
         vulnerabilities.append("CRITICAL: Prompt contains raw embedded API keys or credentials")
     if not has_boundary:
@@ -62,9 +63,9 @@ def audit_mcp_config(config_json: str) -> str:
     try:
         data = json.loads(config_json)
     except Exception as e:
-        return json.dumps({"error": f"Invalid JSON provided: {str(e)}"}, indent=2)
+        return json.dumps({"error": f"Invalid JSON provided: {e!s}"}, indent=2)
 
-    findings: List[Dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
     servers = data.get("mcpServers", data)
     if isinstance(servers, dict):
         for name, srv in servers.items():

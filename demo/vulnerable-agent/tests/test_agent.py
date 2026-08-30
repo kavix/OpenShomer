@@ -1,6 +1,8 @@
-import yaml
 import json
 from pathlib import Path
+
+import yaml
+
 
 def test_vulnerable_agent_configs_exist():
     base_dir = Path(__file__).parent.parent

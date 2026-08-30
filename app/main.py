@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.findings import router as findings_router
 from app.api.mulerun import router as mulerun_router
 

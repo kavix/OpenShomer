@@ -1,10 +1,9 @@
-import json
 from datetime import datetime, timezone
-from typing import List, Dict, Any
 from pathlib import Path
-from app.models.findings import Finding
-from app.models.security_db import SecurityBenchmarkDatabase
+from typing import Any
+
 from app.github.pull_requests import PullRequestManager
+from app.models.findings import Finding
 
 
 class IndustrialReportExporter:
@@ -15,7 +14,7 @@ class IndustrialReportExporter:
     """
 
     @classmethod
-    def export_sarif(cls, findings: List[Finding], workspace_root: Path) -> Dict[str, Any]:
+    def export_sarif(cls, findings: list[Finding], workspace_root: Path) -> dict[str, Any]:
         """Generate OASIS SARIF v2.1.0 report for native GitHub Advanced Security & CI/CD tab ingestion."""
         rules = []
         results = []
@@ -82,7 +81,7 @@ class IndustrialReportExporter:
         return sarif_doc
 
     @classmethod
-    def export_ai_bom(cls, workspace_root: Path, findings: List[Finding]) -> Dict[str, Any]:
+    def export_ai_bom(cls, workspace_root: Path, findings: list[Finding]) -> dict[str, Any]:
         """Generate CycloneDX v1.5 / AI Bill of Materials (AIBOM) tracking models, tools, skills & MCPs."""
         components = []
         

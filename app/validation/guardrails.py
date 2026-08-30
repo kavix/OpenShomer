@@ -1,5 +1,4 @@
 import re
-from typing import List, Tuple
 
 
 class PatchGuardrails:
@@ -10,7 +9,7 @@ class PatchGuardrails:
     """
 
     @staticmethod
-    def check_scope(diff: str, allowed_files: List[str]) -> Tuple[bool, str]:
+    def check_scope(diff: str, allowed_files: list[str]) -> tuple[bool, str]:
         """Ensures the diff touches only allowed affected files."""
         touched_files = re.findall(r"^\+\+\+ b/(.+)$", diff, re.MULTILINE)
         for f in touched_files:
@@ -19,7 +18,7 @@ class PatchGuardrails:
         return True, "Scope check passed."
 
     @staticmethod
-    def check_size(diff: str, max_lines: int = 300) -> Tuple[bool, str]:
+    def check_size(diff: str, max_lines: int = 300) -> tuple[bool, str]:
         """Ensures the diff is minimal and does not exceed maximum blast radius."""
         added_or_removed = [line for line in diff.splitlines() if line.startswith(("+", "-")) and not line.startswith(("+++", "---"))]
         if len(added_or_removed) > max_lines:
@@ -27,14 +26,14 @@ class PatchGuardrails:
         return True, "Size check passed."
 
     @staticmethod
-    def check_permission_reduction(diff: str) -> Tuple[bool, str]:
+    def check_permission_reduction(diff: str) -> tuple[bool, str]:
         """Verifies that high-risk permissions were reduced and not expanded."""
         if "+  - \"shell:unrestricted\"" in diff or "+  - \"fs:write_all\"" in diff:
             return False, "Guardrail Violation: Attempted to add unrestricted shell or filesystem permissions."
         return True, "Permission reduction check passed."
 
     @staticmethod
-    def check_feature_preservation(diff: str) -> Tuple[bool, str]:
+    def check_feature_preservation(diff: str) -> tuple[bool, str]:
         """Invariant: Ensures patches harden tools rather than completely deleting valid user features.
         
         Guarantees that when tools or configs are patched:
@@ -57,7 +56,7 @@ class PatchGuardrails:
 
         return True, "Feature preservation invariant verified."
 
-    def validate_patch(self, diff: str, allowed_files: List[str], max_lines: int = 300) -> Tuple[bool, str]:
+    def validate_patch(self, diff: str, allowed_files: list[str], max_lines: int = 300) -> tuple[bool, str]:
         if not diff.strip():
             return True, "Empty diff passed."
         

@@ -1,6 +1,6 @@
 import time
-from typing import Any, Union, Dict, List
 from pathlib import Path
+from typing import Any
 
 try:
     import orjson
@@ -38,7 +38,7 @@ class FastEngineSerializer:
         return json.dumps(obj).encode("utf-8")
 
     @staticmethod
-    def loads(data: Union[str, bytes]) -> Any:
+    def loads(data: str | bytes) -> Any:
         """Rust-accelerated parsing (up to 15x faster than json.loads)."""
         if HAS_ORJSON:
             if isinstance(data, str):
@@ -63,7 +63,7 @@ class FastEngineSerializer:
         return FastEngineSerializer.loads(binary_data)
 
     @staticmethod
-    def load_benchmark_suite(file_path: Path) -> Dict[str, Any]:
+    def load_benchmark_suite(file_path: Path) -> dict[str, Any]:
         """High-speed zero-copy file ingest for 1,000+ benchmark test cases."""
         raw_bytes = file_path.read_bytes()
         if HAS_ORJSON:

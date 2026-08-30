@@ -1,9 +1,9 @@
 import json
-import yaml
 from pathlib import Path
+
 from app.qoder.diff_synthesizer import DiffSynthesizer
-from app.qoder.prompt_fencing import PromptFenceBuilder
 from app.qoder.ide import QoderIDE
+from app.qoder.prompt_fencing import PromptFenceBuilder
 
 
 def test_qoder_prompt_fence_builder():

@@ -1,15 +1,16 @@
 import json
 import re
-import yaml
 from pathlib import Path
-from typing import Dict, Any, Tuple, List
+
+import yaml
+
 from app.models.findings import Finding, FindingType, Severity
 
 
 class StaticPolicyChecker:
     """Static checks for permissions, approval gates, and sensitive tokens."""
 
-    def verify_workspace(self, workspace_root: Path) -> Tuple[bool, List[str]]:
+    def verify_workspace(self, workspace_root: Path) -> tuple[bool, list[str]]:
         violations = [finding.issue for finding in self.detect_findings(workspace_root)]
 
         tools_file = workspace_root / "agent/tools.yaml"
@@ -22,7 +23,7 @@ class StaticPolicyChecker:
                     if not tool.get("requires_approval", False) and "shell" in tool.get("name", ""):
                         violations.append(f"Tool '{tool.get('name')}' lacks requires_approval=True.")
             except Exception as e:
-                violations.append(f"Failed to parse tools.yaml: {str(e)}")
+                violations.append(f"Failed to parse tools.yaml: {e!s}")
 
         mcp_file = workspace_root / "mcp/mcp_servers.json"
         if mcp_file.exists():
@@ -35,13 +36,13 @@ class StaticPolicyChecker:
                     if "sk_live_" in env_vals or "secret_" in env_vals:
                         violations.append(f"MCP server '{name}' contains raw hardcoded secret tokens.")
             except Exception as e:
-                violations.append(f"Failed to parse mcp_servers.json: {str(e)}")
+                violations.append(f"Failed to parse mcp_servers.json: {e!s}")
 
         return len(violations) == 0, violations
 
-    def detect_findings(self, workspace_root: Path) -> List[Finding]:
+    def detect_findings(self, workspace_root: Path) -> list[Finding]:
         """Return structured deterministic findings for OWASP LLM categories."""
-        findings: List[Finding] = []
+        findings: list[Finding] = []
         finding_id = 1
         for prompt_file in self._prompt_files(workspace_root):
             content = prompt_file.read_text(encoding="utf-8")
@@ -63,7 +64,7 @@ class StaticPolicyChecker:
                 for tool in data.get("tools", []):
                     name = str(tool.get("name", ""))
                     permissions = {str(permission).lower() for permission in tool.get("permissions", [])}
-                    dangerous = ("shell" in name.lower() or "subprocess" in name.lower() or "sql" in name.lower() or any(token in permissions for token in {"shell:unrestricted", "filesystem:write"}))
+                    dangerous = ("shell" in name.lower() or "subprocess" in name.lower() or "sql" in name.lower() or any(token in permissions for token in ("shell:unrestricted", "filesystem:write")))
                     bounded = bool(tool.get("parameter_bounds") or tool.get("requires_approval"))
                     if dangerous and not bounded:
                         findings.append(self._finding(finding_id, FindingType.EXCESSIVE_AGENCY, Severity.HIGH, "agent/tools.yaml", f"Tool '{name}' exposes a dangerous capability without approval or parameter bounds.", workspace_root, tool=name))
@@ -73,7 +74,7 @@ class StaticPolicyChecker:
         return findings
 
     @staticmethod
-    def _prompt_files(workspace_root: Path) -> List[Path]:
+    def _prompt_files(workspace_root: Path) -> list[Path]:
         prompt_root = workspace_root / "prompts"
         if not prompt_root.exists():
             return []

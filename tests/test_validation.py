@@ -1,8 +1,10 @@
 from pathlib import Path
-from app.validation.sandbox import SandboxRunner
-from app.validation.guardrails import PatchGuardrails
+
 from app.models.findings import FindingType
+from app.validation.guardrails import PatchGuardrails
+from app.validation.sandbox import SandboxRunner
 from app.validation.static import StaticPolicyChecker
+
 
 def test_guardrails_reject_unauthorized_scope():
     guard = PatchGuardrails()

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -41,12 +42,12 @@ class Finding(BaseModel):
     type: FindingType = Field(..., description="Classification of the security risk")
     severity: Severity = Field(..., description="Severity level")
     file: str = Field(..., description="Relative path to affected config/prompt file")
-    tool: Optional[str] = Field(None, description="Affected tool or MCP server name")
+    tool: str | None = Field(None, description="Affected tool or MCP server name")
     issue: str = Field(..., description="Summary of the vulnerability")
     repository: str = Field(..., description="Repository or project name")
     status: FindingStatus = Field(default=FindingStatus.INGESTED, description="Current workflow status")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class FindingReceipt(BaseModel):
@@ -60,19 +61,19 @@ class FindingReceipt(BaseModel):
 class InvestigationResult(BaseModel):
     finding_id: str
     root_cause: str
-    affected_files: List[str]
+    affected_files: list[str]
     recommended_fix: str
     confidence: float = Field(..., ge=0.0, le=1.0)
     risk: Severity
-    details: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    details: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class RemediationResult(BaseModel):
     finding_id: str
     diff: str
-    modified_files: List[str]
+    modified_files: list[str]
     guardrails_passed: bool
-    rejection_reason: Optional[str] = None
+    rejection_reason: str | None = None
 
 
 class ValidationReport(BaseModel):
@@ -83,7 +84,7 @@ class ValidationReport(BaseModel):
     total_redteam_tests: int
     passed_redteam_tests: int
     status: str
-    details: List[str] = Field(default_factory=list)
+    details: list[str] = Field(default_factory=list)
 
 
 class ResolutionResult(BaseModel):
@@ -92,5 +93,5 @@ class ResolutionResult(BaseModel):
     investigation: InvestigationResult
     remediation: RemediationResult
     validation: ValidationReport
-    pr_url: Optional[str] = None
+    pr_url: str | None = None
     evidence_summary: str

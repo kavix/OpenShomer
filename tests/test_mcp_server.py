@@ -1,7 +1,6 @@
 ﻿import json
-from pathlib import Path
-import pytest
-from app.mcp.server import scan_agent_config, redteam_prompt, audit_mcp_config
+
+from app.mcp.server import audit_mcp_config, redteam_prompt, scan_agent_config
 
 
 def test_mcp_scan_agent_config_demo_vulnerable():

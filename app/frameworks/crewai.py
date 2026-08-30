@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+
 from app.models.findings import Finding, FindingType, Severity
 
 
@@ -8,7 +8,7 @@ class CrewAIScanner:
     """Scans and analyzes CrewAI Agents, Tasks, and Crews for delegation & permission risks."""
 
     @classmethod
-    def scan_crewai_agents(cls, workspace_root: Path) -> List[Finding]:
+    def scan_crewai_agents(cls, workspace_root: Path) -> list[Finding]:
         findings = []
         finding_idx = 400
 

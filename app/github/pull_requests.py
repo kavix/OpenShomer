@@ -1,13 +1,11 @@
-from typing import Dict, Any, Optional
 from app.models.findings import Finding, InvestigationResult, ValidationReport
-from app.models.security_db import SecurityBenchmarkDatabase
 
 
 class PullRequestManager:
     """Builds structured evidence PR templates with MITRE ATLAS, OWASP LLM, and CWE threat intelligence mappings."""
 
     @staticmethod
-    def get_security_taxonomy_mapping(finding_type_str: str) -> Dict[str, str]:
+    def get_security_taxonomy_mapping(finding_type_str: str) -> dict[str, str]:
         """Maps finding to MITRE ATLAS, OWASP LLM Top 10, NIST AI RMF, and CWE taxonomy."""
         ft = finding_type_str.upper()
         
@@ -111,15 +109,15 @@ class PullRequestManager:
         investigation: InvestigationResult,
         validation: ValidationReport,
         diff: str,
-        token: Optional[str] = None,
-        repo_name: Optional[str] = None,
+        token: str | None = None,
+        repo_name: str | None = None,
     ) -> str:
         pr_body = self.build_evidence_pr_body(finding, investigation, validation, diff)
         target_repo = repo_name or finding.repository
         
         if token and "/" in target_repo:
             try:
-                from github import Github, Auth
+                from github import Auth, Github
                 g = Github(auth=Auth.Token(token))
                 repo = g.get_repo(target_repo)
                 
@@ -140,8 +138,9 @@ class PullRequestManager:
                         original_text = existing_file.decoded_content.decode("utf-8")
                         
                         # Generate proper rewritten file content using RemediationEngine
-                        from app.agents.remediation import RemediationEngine
                         from pathlib import Path
+
+                        from app.agents.remediation import RemediationEngine
                         remediator = RemediationEngine(workspace_root=Path("."))
                         rewritten_text = remediator._rewrite_file_content(finding.file, original_text, finding.type)
 
@@ -183,7 +182,7 @@ class PullRequestManager:
                     base=default_branch
                 )
                 return pr.html_url
-            except Exception as e:
+            except Exception:
                 pass
 
         # Fallback simulation URL if no token provided or API fails

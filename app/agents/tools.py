@@ -1,8 +1,8 @@
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 import os
+from pathlib import Path
+from typing import Any
+
 import yaml
-import json
 
 
 class AgentRepoTools:
@@ -24,7 +24,7 @@ class AgentRepoTools:
             raise FileNotFoundError(f"File '{rel_path}' does not exist.")
         return path.read_text(encoding="utf-8")
 
-    def search_code(self, query: str, extension_filter: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def search_code(self, query: str, extension_filter: list[str] | None = None) -> list[dict[str, Any]]:
         """Searches for pattern matches across files in workspace."""
         results = []
         for root, _, files in os.walk(self.workspace_root):
@@ -49,7 +49,7 @@ class AgentRepoTools:
                     continue
         return results
 
-    def list_files(self, sub_dir: str = "") -> List[str]:
+    def list_files(self, sub_dir: str = "") -> list[str]:
         """Lists files relative to workspace."""
         target_dir = self._resolve_safe(sub_dir)
         files_list = []
@@ -60,16 +60,16 @@ class AgentRepoTools:
                     files_list.append(rel)
         return files_list
 
-    def list_tools(self, tools_config_path: str = "agent/tools.yaml") -> List[Dict[str, Any]]:
+    def list_tools(self, tools_config_path: str = "agent/tools.yaml") -> list[dict[str, Any]]:
         """Parses tool definitions from YAML."""
         try:
             content = self.read_file(tools_config_path)
             data = yaml.safe_load(content)
             return data.get("tools", [])
         except Exception as e:
-            return [{"error": f"Failed to parse tools config: {str(e)}"}]
+            return [{"error": f"Failed to parse tools config: {e!s}"}]
 
-    def get_prompt_context(self, prompt_path: str = "prompts/system.md") -> Dict[str, Any]:
+    def get_prompt_context(self, prompt_path: str = "prompts/system.md") -> dict[str, Any]:
         """Reads system prompt and provides metadata."""
         content = self.read_file(prompt_path)
         return {

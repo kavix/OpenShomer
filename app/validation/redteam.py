@@ -1,6 +1,5 @@
-import json
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+
 from app.models.findings import ValidationReport
 
 

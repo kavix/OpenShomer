@@ -1,8 +1,7 @@
 import difflib
 import json
+
 import yaml
-from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
 
 
 class DiffSynthesizer:
@@ -13,7 +12,7 @@ class DiffSynthesizer:
     """
 
     @classmethod
-    def synthesize_tool_yaml(cls, original_yaml_text: str) -> Tuple[str, str]:
+    def synthesize_tool_yaml(cls, original_yaml_text: str) -> tuple[str, str]:
         """Synthesize advanced feature-preserving tool configuration patch."""
         try:
             data = yaml.safe_load(original_yaml_text) or {}
@@ -99,7 +98,7 @@ class DiffSynthesizer:
         return rewritten, "".join(diff_lines)
 
     @classmethod
-    def synthesize_mcp_json(cls, original_json_text: str) -> Tuple[str, str]:
+    def synthesize_mcp_json(cls, original_json_text: str) -> tuple[str, str]:
         """Synthesize advanced scoped least-privilege MCP server configurations across various app types."""
         try:
             data = json.loads(original_json_text)
@@ -157,7 +156,7 @@ class DiffSynthesizer:
         return rewritten, "".join(diff_lines)
 
     @classmethod
-    def synthesize_prompt_fence(cls, original_prompt: str, filename: str = "prompts/system.md") -> Tuple[str, str]:
+    def synthesize_prompt_fence(cls, original_prompt: str, filename: str = "prompts/system.md") -> tuple[str, str]:
         """Synthesize advanced feature-preserving prompt security fence diff."""
         if "Acme Corp" in original_prompt or "support assistant" in original_prompt.lower():
             rewritten = """# Customer Support Agent System Prompt

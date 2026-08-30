@@ -1,14 +1,13 @@
-import hmac
 import hashlib
-import time
-from typing import Dict, Any, Optional, Tuple
+import hmac
+from typing import Any
 
 
 class GitHubWebhookVerifier:
     """Verifies GitHub HMAC-SHA256 signatures and extracts event metadata in < 10ms."""
 
     @staticmethod
-    def verify_signature(payload_bytes: bytes, secret: str, signature_header: Optional[str]) -> bool:
+    def verify_signature(payload_bytes: bytes, secret: str, signature_header: str | None) -> bool:
         """Validate the X-Hub-Signature-256 header against the payload and secret."""
         if not secret:
             return True  # If no secret is configured, accept the event in dev/test mode
@@ -24,7 +23,7 @@ class GitHubWebhookVerifier:
         return hmac.compare_digest(expected_sig, signature_header)
 
     @staticmethod
-    def parse_github_event(event_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_github_event(event_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Extract repository, commits, and modified files from GitHub webhook."""
         repo = payload.get("repository", {}).get("full_name", "unknown/repo")
         ref = payload.get("ref", "refs/heads/main")

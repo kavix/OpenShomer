@@ -1,9 +1,10 @@
 from pathlib import Path
-from app.frameworks.skills import SkillFileScanner
+
+from app.frameworks import scan_all_agent_frameworks
+from app.frameworks.crewai import CrewAIScanner
 from app.frameworks.langchain import LangChainScanner
 from app.frameworks.llamaindex import LlamaIndexScanner
-from app.frameworks.crewai import CrewAIScanner
-from app.frameworks import scan_all_agent_frameworks
+from app.frameworks.skills import SkillFileScanner
 
 
 def test_skill_file_scanner(tmp_path: Path):

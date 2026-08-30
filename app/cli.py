@@ -1,19 +1,17 @@
 import json
-import sys
 from pathlib import Path
-from typing import List, Optional
+
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from app.models.findings import Finding, FindingType, Severity, FindingStatus
 from app.agents.investigator import InvestigationAgent
+from app.agents.providers import get_llm_provider
 from app.agents.remediation import RemediationEngine
-from app.agents.providers import get_llm_provider, LLMProvider
-from app.validation.sandbox import SandboxRunner
-from app.github.pull_requests import PullRequestManager
 from app.fast_io import FastEngineSerializer
-
+from app.github.pull_requests import PullRequestManager
+from app.models.findings import Finding, FindingType, Severity
+from app.validation.sandbox import SandboxRunner
 
 app = typer.Typer(
     name="openshomer",
@@ -23,9 +21,9 @@ app = typer.Typer(
 console = Console()
 
 
-def scan_workspace(workspace_root: Path) -> List[Finding]:
+def scan_workspace(workspace_root: Path) -> list[Finding]:
     """Scan an AI agent repository for configuration risks and prompt vulnerabilities."""
-    findings: List[Finding] = []
+    findings: list[Finding] = []
     finding_idx = 1
 
     # 1. Check tools.yaml
@@ -70,7 +68,7 @@ def scan_workspace(workspace_root: Path) -> List[Finding]:
                     type=FindingType.OVER_PERMISSIONED_TOOL,
                     severity=Severity.MEDIUM,
                     file="agent/tools.yaml",
-                    issue=f"Failed to parse agent/tools.yaml: {str(e)}",
+                    issue=f"Failed to parse agent/tools.yaml: {e!s}",
                     repository=workspace_root.name,
                 )
             )
@@ -131,7 +129,7 @@ def scan_workspace(workspace_root: Path) -> List[Finding]:
                     type=FindingType.OVER_PERMISSIONED_TOOL,
                     severity=Severity.MEDIUM,
                     file="mcp/mcp_servers.json",
-                    issue=f"Failed to parse mcp/mcp_servers.json: {str(e)}",
+                    issue=f"Failed to parse mcp/mcp_servers.json: {e!s}",
                     repository=workspace_root.name,
                 )
             )
@@ -181,8 +179,8 @@ def scan_workspace(workspace_root: Path) -> List[Finding]:
 def scan_command(
     path: Path = typer.Argument(Path("."), help="Path to AI agent repository directory"),
     json_output: bool = typer.Option(False, "--json", help="Output findings as JSON"),
-    sarif: Optional[Path] = typer.Option(None, "--sarif", help="Export OASIS SARIF v2.1.0 report for GitHub Advanced Security / CI"),
-    aibom: Optional[Path] = typer.Option(None, "--aibom", help="Export CycloneDX AI Bill of Materials (AIBOM) JSON"),
+    sarif: Path | None = typer.Option(None, "--sarif", help="Export OASIS SARIF v2.1.0 report for GitHub Advanced Security / CI"),
+    aibom: Path | None = typer.Option(None, "--aibom", help="Export CycloneDX AI Bill of Materials (AIBOM) JSON"),
     exit_code: bool = typer.Option(True, "--exit-code/--no-exit-code", help="Exit with 1 on HIGH/CRITICAL risks"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Print detailed scan execution logs"),
 ) -> None:
@@ -247,12 +245,12 @@ def scan_command(
 def fix_command(
     path: Path = typer.Argument(Path("."), help="Path to AI agent repository directory"),
     auto_pr: bool = typer.Option(False, "--auto-pr", help="Automatically create GitHub PR if token available"),
-    github_token: Optional[str] = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
-    repo_name: Optional[str] = typer.Option(None, "--repo", "--repo-name", envvar="GITHUB_REPOSITORY", help="GitHub Repository (owner/repo)"),
-    provider: Optional[str] = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
-    model: Optional[str] = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
-    api_key: Optional[str] = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
-    redteam_dir: Optional[Path] = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
+    github_token: str | None = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
+    repo_name: str | None = typer.Option(None, "--repo", "--repo-name", envvar="GITHUB_REPOSITORY", help="GitHub Repository (owner/repo)"),
+    provider: str | None = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
+    model: str | None = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
+    api_key: str | None = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
+    redteam_dir: Path | None = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
     """Investigate findings, synthesize safe diffs, validate in sandbox, and optionally open a PR."""
     workspace_path = path.resolve()
@@ -307,12 +305,12 @@ def fix_command(
 @app.command(name="auto-pr")
 def auto_pr_command(
     path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
-    repo_name: Optional[str] = typer.Option(None, "--repo-name", "--repo", envvar="GITHUB_REPOSITORY", help="GitHub repo name (e.g. owner/repo)"),
-    github_token: Optional[str] = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
-    provider: Optional[str] = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
-    model: Optional[str] = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
-    api_key: Optional[str] = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
-    redteam_dir: Optional[Path] = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
+    repo_name: str | None = typer.Option(None, "--repo-name", "--repo", envvar="GITHUB_REPOSITORY", help="GitHub repo name (e.g. owner/repo)"),
+    github_token: str | None = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
+    provider: str | None = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
+    model: str | None = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
+    api_key: str | None = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
+    redteam_dir: Path | None = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
     """Full autonomous pipeline: Scan -> Investigate -> Rewrite -> 150+ Red-Team Validation -> Evidence PR."""
     fix_command(
@@ -329,7 +327,7 @@ def auto_pr_command(
 
 @app.command(name="mulerun")
 def mulerun_command(
-    webhook_event: Optional[str] = typer.Option(None, "--event", help="Simulate a GitHub webhook event (push, pull_request)"),
+    webhook_event: str | None = typer.Option(None, "--event", help="Simulate a GitHub webhook event (push, pull_request)"),
     repo: str = typer.Option("owner/agent-repo", "--repo", help="Target repository identifier"),
 ) -> None:
     """MuleRun: Automated AI security workflow runtime."""
@@ -352,7 +350,7 @@ def mulerun_command(
 @app.command(name="qoderwork")
 def qoderwork_command(
     path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
-    provider: Optional[str] = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider"),
+    provider: str | None = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider"),
 ) -> None:
     """QoderWork: Autonomous Desktop AI Agent (Trigger -> Investigate -> Action -> Resolved)."""
     from app.qoderwork.agent import QoderWorkAgent

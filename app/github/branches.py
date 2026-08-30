@@ -1,12 +1,11 @@
 import subprocess
-from typing import Tuple
 
 
 class BranchManager:
     """Manages Git branch creation for security patches."""
 
     @staticmethod
-    def create_security_branch(branch_name: str, cwd: str) -> Tuple[bool, str]:
+    def create_security_branch(branch_name: str, cwd: str) -> tuple[bool, str]:
         try:
             res = subprocess.run(
                 ["git", "checkout", "-b", branch_name],

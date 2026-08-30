@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from app.qoder.diff_synthesizer import DiffSynthesizer
 from app.qoder.prompt_fencing import PromptFenceBuilder
 
@@ -16,7 +17,7 @@ class QoderIDE:
         self.diff_synthesizer = DiffSynthesizer()
         self.prompt_fencing = PromptFenceBuilder()
 
-    def generate_remediation_diff(self, relative_path: str) -> Dict[str, Any]:
+    def generate_remediation_diff(self, relative_path: str) -> dict[str, Any]:
         """Generate precise least-privilege diff and rewritten content for a target file."""
         target = self.workspace_root / relative_path
         if not target.exists() or not target.is_file():

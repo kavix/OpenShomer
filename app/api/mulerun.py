@@ -1,7 +1,9 @@
 import os
-from fastapi import APIRouter, Request, HTTPException, Header
-from typing import Dict, Any, Optional
-from app.mulerun.runtime import MuleRunRuntime, MuleRunResult
+from typing import Any
+
+from fastapi import APIRouter, Header, HTTPException, Request
+
+from app.mulerun.runtime import MuleRunRuntime
 
 router = APIRouter(prefix="/mulerun", tags=["mulerun"])
 runtime_instance = MuleRunRuntime()
@@ -11,8 +13,8 @@ runtime_instance = MuleRunRuntime()
 async def handle_github_webhook(
     request: Request,
     x_github_event: str = Header(default="push"),
-    x_hub_signature_256: Optional[str] = Header(default=None),
-) -> Dict[str, Any]:
+    x_hub_signature_256: str | None = Header(default=None),
+) -> dict[str, Any]:
     """MuleRun GitHub webhook ingestion endpoint."""
     raw_body = await request.body()
     secret = os.getenv("GITHUB_WEBHOOK_SECRET", "")
