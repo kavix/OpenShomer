@@ -83,31 +83,34 @@ class PullRequestManager:
                 # Commit changed files to the branch if diff/files exist
                 if diff and finding.file:
                     try:
-                        # Extract modified content from diff or rewrite
-                        lines = diff.splitlines()
-                        new_content_lines = []
-                        for l in lines:
-                            if l.startswith("+++") or l.startswith("---") or l.startswith("@@") or l.startswith("-"):
-                                continue
-                            if l.startswith("+"):
-                                new_content_lines.append(l[1:])
-                            else:
-                                new_content_lines.append(l)
+                        existing_file = repo.get_contents(finding.file, ref=default_branch)
+                        original_text = existing_file.decoded_content.decode("utf-8")
                         
-                        file_content = "\n".join(new_content_lines).strip()
-                        if file_content:
+                        # Generate proper rewritten file content using RemediationEngine
+                        from app.agents.remediation import RemediationEngine
+                        remediator = RemediationEngine(workspace_root=Path("."))
+                        rewritten_text = remediator._rewrite_file_content(finding.file, original_text, finding.type)
+
+                        if rewritten_text and rewritten_text != original_text:
+                            # Update existing branch file with real cleanly formatted content
                             try:
-                                existing_file = repo.get_contents(finding.file, ref=branch_name)
+                                branch_file = repo.get_contents(finding.file, ref=branch_name)
                                 repo.update_file(
                                     path=finding.file,
                                     message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
-                                    content=file_content,
-                                    sha=existing_file.sha,
+                                    content=rewritten_text,
+                                    sha=branch_file.sha,
                                     branch=branch_name,
                                 )
                             except Exception:
-                                pass
-                    except Exception:
+                                repo.update_file(
+                                    path=finding.file,
+                                    message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                                    content=rewritten_text,
+                                    sha=existing_file.sha,
+                                    branch=branch_name,
+                                )
+                    except Exception as e:
                         pass
 
                 # Check if PR already exists for this branch
