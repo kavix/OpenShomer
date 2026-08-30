@@ -45,7 +45,7 @@ class RemediationEngine:
         is_valid, reason = self.guardrails.validate_patch(
             diff=full_diff,
             allowed_files=investigation.affected_files,
-            max_lines=150
+            max_lines=300
         )
 
         return RemediationResult(

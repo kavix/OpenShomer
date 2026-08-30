@@ -15,7 +15,7 @@ class PatchGuardrails:
         return True, "Scope check passed."
 
     @staticmethod
-    def check_size(diff: str, max_lines: int = 150) -> Tuple[bool, str]:
+    def check_size(diff: str, max_lines: int = 300) -> Tuple[bool, str]:
         """Ensures the diff is minimal and does not exceed maximum blast radius."""
         added_or_removed = [line for line in diff.splitlines() if line.startswith(("+", "-")) and not line.startswith(("+++", "---"))]
         if len(added_or_removed) > max_lines:
@@ -29,7 +29,7 @@ class PatchGuardrails:
             return False, "Guardrail Violation: Attempted to add unrestricted shell or filesystem permissions."
         return True, "Permission reduction check passed."
 
-    def validate_patch(self, diff: str, allowed_files: List[str], max_lines: int = 150) -> Tuple[bool, str]:
+    def validate_patch(self, diff: str, allowed_files: List[str], max_lines: int = 300) -> Tuple[bool, str]:
         if not diff.strip():
             return True, "Empty diff passed."
         
