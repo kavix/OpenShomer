@@ -24,10 +24,12 @@ dependencies = [
     "PyGithub>=2.2.0",
     "typer>=0.9.0",
     "rich>=13.0.0",
+    "mcp>=1.0.0,<2",
 ]
 
 [project.scripts]
 openshomer = "app.cli:app"
+openshomer-mcp = "app.mcp.server:main"
 
 [dependency-groups]
 dev = [
