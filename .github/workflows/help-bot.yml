@@ -41,28 +41,32 @@ jobs:
             let responseBody = '';
 
             if (isHelp) {
-              responseBody = `**OpenShomer Bot:** Available repository commands and resources:
-
-| Command | Description |
-|---|---|
-| \`/assign\`, \`#assign\`, \`/take\`, \`#take\`, \`/claim\` | Assign issue/PR to yourself or specified user |
-| \`/unassign\`, \`#unassign\`, \`/release\`, \`#release\` | Unassign issue/PR from yourself or specified user |
-| \`/lgtm\`, \`LGTM!\`, \`#lgtm\` | Auto-merge an approved pull request via squash merge |
-| \`/help\`, \`#help\`, \`/commands\` | Display this help menu |
-| \`/docs\`, \`#docs\` | Provide links to project documentation and developer setup |
-
-**Key Links:**
-- Contributing Guide: https://github.com/kavix/OpenShomer/blob/main/CONTRIBUTING.md
-- Discussions: https://github.com/kavix/OpenShomer/discussions
-- Issue Tracker: https://github.com/kavix/OpenShomer/issues`;
+              responseBody = [
+                '**OpenShomer Bot:** Available repository commands and resources:',
+                '',
+                '| Command | Description |',
+                '|---|---|',
+                '| `/assign`, `#assign`, `/take`, `#take`, `/claim` | Assign issue/PR to yourself or specified user |',
+                '| `/unassign`, `#unassign`, `/release`, `#release` | Unassign issue/PR from yourself or specified user |',
+                '| `/lgtm`, `LGTM!`, `#lgtm` | Auto-merge an approved pull request via squash merge |',
+                '| `/help`, `#help`, `/commands` | Display this help menu |',
+                '| `/docs`, `#docs` | Provide links to project documentation and developer setup |',
+                '',
+                '**Key Links:**',
+                '- Contributing Guide: https://github.com/kavix/OpenShomer/blob/main/CONTRIBUTING.md',
+                '- Discussions: https://github.com/kavix/OpenShomer/discussions',
+                '- Issue Tracker: https://github.com/kavix/OpenShomer/issues'
+              ].join('\n');
             } else if (isDocs) {
-              responseBody = `**OpenShomer Bot:** OpenShomer Documentation Index:
-
-- Architecture & Threat Model: https://github.com/kavix/OpenShomer/blob/main/docs/USE_CASES.md
-- Contributing Guide: https://github.com/kavix/OpenShomer/blob/main/CONTRIBUTING.md
-- Code of Conduct: https://github.com/kavix/OpenShomer/blob/main/CODE_OF_CONDUCT.md
-- Security Policy: https://github.com/kavix/OpenShomer/blob/main/SECURITY.md
-- Local Setup: Run \`uv sync\` and \`uv run pytest -v\` or \`make test\`.`;
+              responseBody = [
+                '**OpenShomer Bot:** OpenShomer Documentation Index:',
+                '',
+                '- Architecture & Threat Model: https://github.com/kavix/OpenShomer/blob/main/docs/USE_CASES.md',
+                '- Contributing Guide: https://github.com/kavix/OpenShomer/blob/main/CONTRIBUTING.md',
+                '- Code of Conduct: https://github.com/kavix/OpenShomer/blob/main/CODE_OF_CONDUCT.md',
+                '- Security Policy: https://github.com/kavix/OpenShomer/blob/main/SECURITY.md',
+                '- Local Setup: Run `uv sync` and `uv run pytest -v` or `make test`.'
+              ].join('\n');
             }
 
             await github.rest.issues.createComment({
