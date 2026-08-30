@@ -213,9 +213,9 @@ class OpenShomerTextualApp(App):
         }
         res = self.mulerun.process_webhook_event(payload)
         
-        log.write(f"📥 [bold green]Webhook Event Processed:[/bold green] {res['event']} on {res['repository']}")
-        log.write(f"⏱️ [bold yellow]Telemetry Latency:[/bold yellow] {res['latency_ms']:.2f} ms")
-        log.write(f"📁 [bold]Target Scoped Files:[/bold] {res['affected_files']}")
+        log.write(f"📥 [bold green]Webhook Event Processed:[/bold green] {res.get('event')} on {res.get('repository')}")
+        log.write(f"⏱️ [bold yellow]Telemetry Latency:[/bold yellow] {res.get('latency_ms', 0):.2f} ms")
+        log.write(f"📁 [bold]Target Scoped Files:[/bold] {res.get('modified_files', [])}")
         self.update_status("MuleRun workflow cycle completed successfully.")
 
     def action_qoder(self) -> None:
