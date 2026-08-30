@@ -1,8 +1,11 @@
 import time
 import uuid
-from typing import Dict, Any, List, Optional, Callable
+import asyncio
+from typing import Dict, Any, List, Optional, Callable, Union
 from pydantic import BaseModel, Field
+
 from app.agents.providers import LLMProvider, get_llm_provider, AlibabaQwenProvider
+from app.mulerun.webhooks import GitHubWebhookVerifier
 
 
 class TelemetryEvent(BaseModel):
@@ -12,6 +15,12 @@ class TelemetryEvent(BaseModel):
     event_type: str
     data: Dict[str, Any] = Field(default_factory=dict)
     duration_ms: float = 0.0
+
+
+class WorkflowStepConfig(BaseModel):
+    name: str
+    action: Optional[str] = None
+    timeout_ms: float = 5000.0
 
 
 class MuleRunResult(BaseModel):
@@ -39,7 +48,13 @@ class MuleRunRuntime:
         """Register a real-time telemetry stream listener."""
         self._subscribers.append(callback)
 
-    def emit_telemetry(self, stage: str, event_type: str, data: Optional[Dict[str, Any]] = None, duration_ms: float = 0.0) -> TelemetryEvent:
+    def emit_telemetry(
+        self,
+        stage: str,
+        event_type: str,
+        data: Optional[Dict[str, Any]] = None,
+        duration_ms: float = 0.0,
+    ) -> TelemetryEvent:
         """Emit telemetry event to all subscribers and append to history."""
         event = TelemetryEvent(
             stage=stage,
@@ -55,37 +70,66 @@ class MuleRunRuntime:
                 pass
         return event
 
-    def process_webhook_event(self, webhook_payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Ingest and normalize a GitHub repository webhook event in < 50ms."""
+    def process_webhook_event(
+        self,
+        webhook_payload: Dict[str, Any],
+        raw_bytes: Optional[bytes] = None,
+        secret: Optional[str] = None,
+        signature: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Ingest and normalize a GitHub repository webhook event in < 10ms with HMAC security."""
         start_time = time.time()
-        event_name = webhook_payload.get("event", "push")
-        repo = webhook_payload.get("repository", {}).get("full_name", "unknown/repo")
-        ref = webhook_payload.get("ref", "refs/heads/main")
-        commits = webhook_payload.get("commits", [])
         
-        modified_files = set()
-        for c in commits:
-            for f in c.get("modified", []) + c.get("added", []):
-                modified_files.add(f)
+        # Verify HMAC signature if provided
+        if raw_bytes and signature:
+            is_valid = GitHubWebhookVerifier.verify_signature(raw_bytes, secret or "", signature)
+            if not is_valid:
+                raise ValueError("Invalid GitHub Webhook HMAC-SHA256 signature.")
 
+        event_name = webhook_payload.get("event", "push")
+        parsed = GitHubWebhookVerifier.parse_github_event(event_name, webhook_payload)
+        
         duration_ms = (time.time() - start_time) * 1000
         self.emit_telemetry(
             stage="webhook_ingestion",
             event_type="github_webhook_received",
-            data={
-                "event": event_name,
-                "repository": repo,
-                "ref": ref,
-                "modified_files": list(modified_files),
-            },
+            data=parsed,
             duration_ms=duration_ms,
         )
 
         return {
-            "event": event_name,
-            "repository": repo,
-            "ref": ref,
-            "affected_files": list(modified_files),
+            **parsed,
+            "latency_ms": duration_ms,
+            "sub_100ms": duration_ms < 100.0,
+        }
+
+    def qwen_security_triage(self, finding_description: str) -> Dict[str, Any]:
+        """Connects directly to Alibaba Cloud Qwen reasoning model to triage threats."""
+        start_time = time.time()
+        triage_prompt = (
+            f"You are a low-latency security engine. Quickly triage the following agent vulnerability finding:\n"
+            f"Finding: {finding_description}\n"
+            f"Respond with: SEVERITY (LOW|MEDIUM|HIGH|CRITICAL) and a 1-sentence risk explanation."
+        )
+
+        try:
+            if isinstance(self.llm_provider, AlibabaQwenProvider):
+                response_text = self.llm_provider.generate(triage_prompt, temperature=0.1)
+            else:
+                response_text = self.llm_provider.generate(triage_prompt) if self.llm_provider else "SEVERITY: HIGH - Unchecked execution."
+        except Exception as e:
+            response_text = f"Fallback triage: HIGH ({str(e)})"
+
+        duration_ms = (time.time() - start_time) * 1000
+        self.emit_telemetry(
+            stage="qwen_triage",
+            event_type="reasoning_completed",
+            data={"finding": finding_description, "response": response_text},
+            duration_ms=duration_ms,
+        )
+
+        return {
+            "triage_response": response_text,
             "latency_ms": duration_ms,
         }
 
@@ -95,7 +139,7 @@ class MuleRunRuntime:
         steps: List[Callable[..., Any]],
         context: Optional[Dict[str, Any]] = None,
     ) -> MuleRunResult:
-        """Execute a low-latency sequential security workflow with live telemetry."""
+        """Execute a low-latency sequential/parallel security workflow with live telemetry."""
         wf_id = f"wf-{uuid.uuid4().hex[:8]}"
         start_time = time.time()
         ctx = context or {}

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.findings import router as findings_router
+from app.api.mulerun import router as mulerun_router
 
 app = FastAPI(
     title="OpenShomer API",
@@ -17,9 +18,11 @@ app.add_middleware(
 )
 
 app.include_router(findings_router)
+app.include_router(mulerun_router)
 
 
 @app.get("/health", tags=["system"])
 def health_check():
     """Health check endpoint."""
     return {"status": "ok", "service": "OpenShomer", "version": "0.1.0"}
+

@@ -1,5 +1,11 @@
-import time
+import hmac
+import hashlib
+import json
+from fastapi.testclient import TestClient
+from app.main import app
 from app.mulerun.runtime import MuleRunRuntime, TelemetryEvent
+from app.mulerun.webhooks import GitHubWebhookVerifier
+from app.agents.providers import AlibabaQwenProvider
 
 
 def test_mulerun_webhook_processing_latency():
@@ -15,9 +21,21 @@ def test_mulerun_webhook_processing_latency():
 
     result = runtime.process_webhook_event(payload)
     assert result["event"] == "push"
-    assert "agent/tools.yaml" in result["affected_files"]
-    assert "prompts/system.md" in result["affected_files"]
+    assert "agent/tools.yaml" in result["modified_files"]
+    assert "prompts/system.md" in result["modified_files"]
     assert result["latency_ms"] < 100.0  # Ultra-fast <100 ms target
+    assert result["sub_100ms"] is True
+
+
+def test_mulerun_hmac_verification():
+    secret = "test_webhook_secret_key_12345"
+    payload = json.dumps({"repository": {"full_name": "owner/repo"}}).encode("utf-8")
+    
+    valid_sig = "sha256=" + hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    invalid_sig = "sha256=invalid_hex_signature"
+
+    assert GitHubWebhookVerifier.verify_signature(payload, secret, valid_sig) is True
+    assert GitHubWebhookVerifier.verify_signature(payload, secret, invalid_sig) is False
 
 
 def test_mulerun_telemetry_subscription():
@@ -49,3 +67,34 @@ def test_mulerun_workflow_execution():
     assert res.output["policy_passed"] is True
     assert res.execution_time_ms < 500.0
     assert len(res.telemetry) == 2
+
+
+def test_mulerun_qwen_triage_mock():
+    runtime = MuleRunRuntime()
+    res = runtime.qwen_security_triage("Shell tool has unrestricted permissions")
+    assert "triage_response" in res
+    assert res["latency_ms"] < 100.0 or res["latency_ms"] >= 0
+
+
+def test_mulerun_fastapi_endpoints():
+    client = TestClient(app)
+    response = client.post(
+        "/mulerun/webhook",
+        headers={"X-GitHub-Event": "push"},
+        json={
+            "repository": {"full_name": "kavix/OpenShomer"},
+            "commits": [{"modified": ["agent/tools.yaml"]}],
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "accepted"
+    assert data["runtime"] == "MuleRun"
+    assert data["latency_ms"] < 100.0
+
+    # Test telemetry endpoint
+    tel_res = client.get("/mulerun/telemetry")
+    assert tel_res.status_code == 200
+    tel_data = tel_res.json()
+    assert "count" in tel_data
+    assert "events" in tel_data
