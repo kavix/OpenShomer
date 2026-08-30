@@ -237,13 +237,29 @@ OpenShomer/
 │   └── ISSUE_TEMPLATE/              # Bug & feature request templates
 ├── app/
 │   ├── api/
-│   │   └── findings.py              # REST endpoints (Ingest, Investigate, Remediate, Validate, Resolve)
+│   │   ├── findings.py              # REST endpoints (Ingest, Investigate, Remediate, Validate, Resolve)
+│   │   └── mulerun.py               # MuleRun webhook (<100ms) & live telemetry endpoints
+│   ├── mulerun/
+│   │   ├── runtime.py               # MuleRun AI workflow runtime (<100ms) & Qwen reasoning gateway
+│   │   └── webhooks.py              # GitHub webhook HMAC-SHA256 ingress verifier
+│   ├── qoderwork/
+│   │   └── agent.py                 # QoderWork desktop agent (Trigger -> Investigate -> Action -> Resolved)
+│   ├── qoder/
+│   │   ├── ide.py                   # Qoder agentic IDE engine
+│   │   ├── diff_synthesizer.py      # AST & schema least-privilege diff synthesizer
+│   │   └── prompt_fencing.py        # Defensive XML prompt fence generator
+│   ├── frameworks/
+│   │   ├── skills.py                # Skill files (SKILL.md, skills/*) security scanner
+│   │   ├── langchain.py             # LangChain tool and runaway executor scanner
+│   │   ├── llamaindex.py            # LlamaIndex FunctionTool & ReActAgent scanner
+│   │   └── crewai.py                # CrewAI multi-agent delegation scanner
 │   ├── models/
 │   │   └── findings.py              # Pydantic schemas (Finding, Severity, InvestigationResult, etc.)
 │   ├── agents/
 │   │   ├── tools.py                 # Read-only repo tools (read_file, search_code, list_tools)
 │   │   ├── investigator.py          # Deep prompt/tool/MCP investigation agent
 │   │   ├── remediation.py           # Minimal safe rewrite generator
+│   │   ├── providers.py             # Alibaba Cloud Qwen, OpenAI & LLM providers
 │   │   └── schemas.py
 │   ├── validation/
 │   │   ├── guardrails.py            # Scope, size, and permission reduction checks

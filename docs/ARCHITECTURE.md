@@ -8,35 +8,53 @@ This document provides a comprehensive technical breakdown of OpenShomer's archi
 
 ```mermaid
 graph TD
-    subgraph INGEST["1. Ingestion Layer"]
-        API["FastAPI Control Plane<br/>app/api/findings.py"]
-        Store["Finding In-Memory / PostgreSQL<br/>app/models/findings.py"]
-        API <--> Store
+    subgraph RUNTIME["1. Low-Latency Workflow Runtime (MuleRun)"]
+        MR["MuleRun Runtime Engine (<100 ms)<br/>app/mulerun/runtime.py"]
+        WH["GitHub Webhook Ingress (HMAC-SHA256)<br/>app/mulerun/webhooks.py"]
+        QWEN["Alibaba Cloud Qwen Reasoning Gateway<br/>app/agents/providers.py"]
+        TELEM["Live Sandbox Telemetry Streamer"]
+        
+        WH --> MR
+        MR <--> QWEN
+        MR <--> TELEM
     end
 
-    subgraph AGENTS["2. Autonomous Agent Layer"]
+    subgraph AGENTS["2. Autonomous Agent Layer (QoderWork)"]
+        QW["QoderWork Desktop Agent Loop<br/>Trigger → Investigate → Action → Resolved<br/>app/qoderwork/agent.py"]
+        FW["Richer Agent Graph Scanners<br/>LangChain, LlamaIndex, CrewAI, Skills<br/>app/frameworks/"]
         IA["Investigation Agent<br/>app/agents/investigator.py"]
         RT["Repo Tool Belt<br/>app/agents/tools.py"]
-        RE["Remediation Engine<br/>app/agents/remediation.py"]
         
-        API --> IA
-        IA <-->|Read-Only Inspection| RT
-        IA --> RE
+        MR --> QW
+        QW --> FW
+        QW --> IA
+        IA <--> RT
     end
 
-    subgraph VALIDATION["3. Validation & Red-Team Layer"]
+    subgraph REMEDIATION["3. Precision Remediation Engine (Qoder)"]
+        QD["Qoder Agentic IDE Backbone<br/>app/qoder/ide.py"]
+        DS["AST & Schema Diff Synthesizer<br/>app/qoder/diff_synthesizer.py"]
+        PF["Defensive Prompt Fencing Engine<br/>app/qoder/prompt_fencing.py"]
+        
+        QW --> QD
+        QD --> DS
+        QD --> PF
+    end
+
+    subgraph VALIDATION["4. Validation & Red-Team Layer"]
         GR["Patch Guardrails<br/>app/validation/guardrails.py"]
         SB["Sandbox Runner<br/>app/validation/sandbox.py"]
         ST["Static Policy Checker<br/>app/validation/static.py"]
-        AT["Adversarial Red-Team Suite<br/>app/validation/redteam.py"]
+        AT["Adversarial Red-Team Suite (156 cases)<br/>app/validation/redteam.py"]
 
-        RE --> GR
+        QD --> GR
         GR --> SB
         SB --> ST
         SB --> AT
+        SB --> TELEM
     end
 
-    subgraph DELIVERY["4. Git & PR Delivery Layer"]
+    subgraph DELIVERY["5. Git & PR Delivery Layer"]
         BM["Branch Manager<br/>app/github/branches.py"]
         CM["Commit Manager<br/>app/github/commits.py"]
         PM["Pull Request Generator<br/>app/github/pull_requests.py"]
@@ -44,12 +62,13 @@ graph TD
         AT -- "Pass" --> BM
         BM --> CM
         CM --> PM
-        PM --> GH["GitHub API (PR with Full Evidence)"]
+        PM --> GH["GitHub API (Evidence-Backed PR)"]
     end
 
-    style INGEST fill:#e8f0fe,stroke:#4285f4
+    style RUNTIME fill:#e8f0fe,stroke:#4285f4
     style AGENTS fill:#e6f4ea,stroke:#34a853
-    style VALIDATION fill:#fef7e0,stroke:#fbbc05
+    style REMEDIATION fill:#fef7e0,stroke:#fbbc05
+    style VALIDATION fill:#fce8e6,stroke:#ea4335
     style DELIVERY fill:#f3e8fd,stroke:#a142f4
 ```
 

@@ -156,14 +156,15 @@ requirements.txt              ← + docker, PyGithub, requests
 
 ---
 
-## Roadmap After v0.1
+## Roadmap & Milestone Status
 
-| Version | Focus | Details |
-|---|---|---|
-| **v0.2 — Richer Agent Graphs** | Multi-tool & skill frameworks | Support for LangChain, LlamaIndex, CrewAI, and complex skill definitions. |
-| **v0.3 — Advanced Red-Teaming** | Adaptive adversarial attacks | Multi-turn jailbreaks, indirect prompt injection across tools, and tool-chaining exploits. |
-| **v0.4 — RAG & Memory Security** | Vector store & memory hardening | Permission checks on retrieval stores, sanitization of retrieved context, memory poisoning defense. |
-| **v0.5 — Runtime Feedback Loop** | Live trace ingestion | Ingest production agent traces to detect anomalies and trigger automated remediation. |
+| Version | Focus | Details | Status |
+|---|---|---|---|
+| **v0.1 — Core Loop (MVP)** | Prompts, Tools, MCPs, Sandbox & PRs | Single-agent configs, prompt fences, Docker sandbox, evidence PRs, MuleRun, QoderWork, Qoder | **Completed & Released** |
+| **v0.2 — Richer Agent Graphs** | Multi-tool & skill frameworks | Support for LangChain, LlamaIndex, CrewAI, and complex skill definitions. | **Completed & Released** |
+| **v0.3 — Advanced Red-Teaming** | Adaptive adversarial attacks | Multi-turn jailbreaks, indirect prompt injection across tools, and tool-chaining exploits. | *In Design* |
+| **v0.4 — RAG & Memory Security** | Vector store & memory hardening | Permission checks on retrieval stores, sanitization of retrieved context, memory poisoning defense. | *Planned* |
+| **v0.5 — Runtime Feedback Loop** | Live trace ingestion | Ingest production agent traces to detect anomalies and trigger automated remediation. | *Planned* |
 
 ---
 
