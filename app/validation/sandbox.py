@@ -23,6 +23,9 @@ class SandboxRunner:
             sandbox_root = temp_path / "sandbox"
 
             # Apply remediated files in sandbox
+            if diff:
+                self._apply_diff_in_sandbox(sandbox_root, diff)
+
             static_ok, static_violations = self.static_checker.verify_workspace(sandbox_root)
             report = self.redteam_validator.run_suite(sandbox_root, finding_id)
 
@@ -32,3 +35,32 @@ class SandboxRunner:
                 report.status = "REJECTED"
 
             return report
+
+    def _apply_diff_in_sandbox(self, sandbox_root: Path, diff: str):
+        """Apply generated diff chunks to files in the sandbox environment."""
+        for chunk in diff.split("--- a/"):
+            if not chunk.strip():
+                continue
+            lines = chunk.splitlines()
+            if not lines:
+                continue
+            file_rel = lines[0].split()[0].strip()
+            target_path = sandbox_root / file_rel
+            
+            # Extract new content from '+' lines (excluding '+++')
+            new_lines = []
+            for line in lines[1:]:
+                if line.startswith("+++"):
+                    continue
+                if line.startswith("@@"):
+                    continue
+                if line.startswith("-"):
+                    continue
+                if line.startswith("+"):
+                    new_lines.append(line[1:])
+                else:
+                    new_lines.append(line)
+            
+            if target_path.exists() and new_lines:
+                target_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+

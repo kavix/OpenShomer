@@ -9,6 +9,9 @@ test:
 run:
 	uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
+scan:
+	uv run python -m app.cli $(TARGET)
+
 docker-build:
 	docker build -t openshomer:latest .
 

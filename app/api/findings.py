@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 import os
 
 from app.models.findings import (
     Finding,
     FindingStatus,
+    FindingType,
+    Severity,
     FindingReceipt,
     InvestigationResult,
     RemediationResult,
@@ -48,9 +50,20 @@ def ingest_finding(finding: Finding) -> FindingReceipt:
 
 
 @router.get("", response_model=List[Finding])
-def list_findings() -> List[Finding]:
-    """List all ingested findings."""
-    return list(FINDINGS_DB.values())
+def list_findings(
+    status: Optional[FindingStatus] = None,
+    severity: Optional[Severity] = None,
+    type: Optional[FindingType] = None
+) -> List[Finding]:
+    """List and browse all ingested findings with optional filters."""
+    results = list(FINDINGS_DB.values())
+    if status:
+        results = [f for f in results if f.status == status]
+    if severity:
+        results = [f for f in results if f.severity == severity]
+    if type:
+        results = [f for f in results if f.type == type]
+    return results
 
 
 @router.get("/{finding_id}", response_model=Finding)
