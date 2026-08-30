@@ -180,19 +180,36 @@ def scan_workspace(workspace_root: Path) -> List[Finding]:
 def scan_command(
     path: Path = typer.Argument(Path("."), help="Path to AI agent repository directory"),
     json_output: bool = typer.Option(False, "--json", help="Output findings as JSON"),
+    sarif: Optional[Path] = typer.Option(None, "--sarif", help="Export OASIS SARIF v2.1.0 report for GitHub Advanced Security / CI"),
+    aibom: Optional[Path] = typer.Option(None, "--aibom", help="Export CycloneDX AI Bill of Materials (AIBOM) JSON"),
     exit_code: bool = typer.Option(True, "--exit-code/--no-exit-code", help="Exit with 1 on HIGH/CRITICAL risks"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Print detailed scan execution logs"),
 ) -> None:
     """Scan an AI agent codebase for security misconfigurations and dangerous capabilities."""
+    from app.models.industrial_reports import IndustrialReportExporter
     workspace_path = path.resolve()
     if not workspace_path.exists() or not workspace_path.is_dir():
         console.print(f"[red]Error: Path '{workspace_path}' does not exist or is not a directory.[/red]")
         raise typer.Exit(code=2)
 
-    if not json_output:
+    if not json_output and not sarif and not aibom:
         console.print(f'\n🔍 [bold cyan]Scanning[/bold cyan] "[bold]{workspace_path.name}[/bold]" for AI Agent security risks...\n')
 
     findings = scan_workspace(workspace_path)
+
+    # Export industrial SARIF format
+    if sarif:
+        sarif_doc = IndustrialReportExporter.export_sarif(findings, workspace_path)
+        sarif.write_text(json.dumps(sarif_doc, indent=2), encoding="utf-8")
+        console.print(f"📄 [bold green]Exported Industrial SARIF v2.1.0 report to:[/bold green] {sarif}")
+        return
+
+    # Export CycloneDX AI Bill of Materials
+    if aibom:
+        bom_doc = IndustrialReportExporter.export_ai_bom(workspace_path, findings)
+        aibom.write_text(json.dumps(bom_doc, indent=2), encoding="utf-8")
+        console.print(f"📦 [bold green]Exported CycloneDX AI Bill of Materials (AIBOM) to:[/bold green] {aibom}")
+        return
 
     if json_output:
         results = [f.model_dump(mode="json") for f in findings]
