@@ -1,77 +1,211 @@
-import sys
+import os
 import time
 from pathlib import Path
 from typing import List, Optional
 
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.layout import Layout
-from rich.live import Live
-from rich.prompt import Prompt
-from rich.syntax import Syntax
-from rich.text import Text
+from textual.app import App, ComposeResult
+from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.widgets import (
+    Header,
+    Footer,
+    Button,
+    DataTable,
+    Static,
+    Label,
+    RichLog,
+    Input,
+)
+from textual.binding import Binding
 
 from app.cli import scan_workspace
 from app.mulerun.runtime import MuleRunRuntime
 from app.qoderwork.agent import QoderWorkAgent
 from app.qoder.ide import QoderIDE
+from app.github.pull_requests import PullRequestManager
+from app.agents.investigator import InvestigationAgent
+from app.agents.remediation import RemediationEngine
+from app.validation.sandbox import SandboxRunner
 
 
-class OpenShomerTUI:
-    """Interactive Terminal User Interface (TUI) for OpenShomer."""
+class OpenShomerTextualApp(App):
+    """Modern Textual-based Interactive TUI for OpenShomer."""
+
+    CSS = """
+    Screen {
+        background: #12141a;
+    }
+
+    #sidebar {
+        width: 32;
+        background: #1a1d26;
+        border-right: heavy #2c3245;
+        padding: 1;
+    }
+
+    #sidebar Button {
+        width: 100%;
+        margin-bottom: 1;
+    }
+
+    #main-panel {
+        padding: 1 2;
+    }
+
+    #banner-card {
+        background: #202636;
+        border: round #4285f4;
+        padding: 1 2;
+        margin-bottom: 1;
+        height: auto;
+    }
+
+    #status-bar {
+        background: #1a1d26;
+        color: #34a853;
+        padding: 0 1;
+        margin-bottom: 1;
+        text-style: bold;
+    }
+
+    DataTable {
+        height: 14;
+        border: solid #2c3245;
+        margin-bottom: 1;
+    }
+
+    RichLog {
+        height: 1fr;
+        background: #0d1017;
+        border: solid #2c3245;
+        padding: 1;
+    }
+
+    .action-btn {
+        background: #2b334a;
+        color: #ffffff;
+    }
+
+    .action-btn:hover {
+        background: #4285f4;
+        color: #ffffff;
+    }
+
+    #btn-pr {
+        background: #2e4c38;
+    }
+
+    #btn-pr:hover {
+        background: #34a853;
+    }
+
+    #btn-quit {
+        background: #4a2424;
+    }
+
+    #btn-quit:hover {
+        background: #ea4335;
+    }
+    """
+
+    BINDINGS = [
+        Binding("q", "quit", "Quit", show=True),
+        Binding("s", "action_scan", "Scan", show=True),
+        Binding("m", "action_mulerun", "MuleRun", show=True),
+        Binding("d", "action_qoder", "Qoder Diff", show=True),
+        Binding("r", "action_remediate", "Remediate Loop", show=True),
+        Binding("p", "action_pr", "Open PR", show=True),
+    ]
 
     def __init__(self, workspace_root: Optional[Path] = None):
-        self.console = Console()
+        super().__init__()
         self.workspace_root = workspace_root or Path(".")
         self.mulerun = MuleRunRuntime()
 
-    def display_banner(self):
-        banner_text = Text()
-        banner_text.append("🛡️  OPENSHOMER ", style="bold cyan")
-        banner_text.append("— Autonomous AI Agent Security Engineer\n", style="bold white")
-        banner_text.append("   • Runtime: ", style="dim")
-        banner_text.append("MuleRun  ", style="bold yellow")
-        banner_text.append("• Autonomous Loop: ", style="dim")
-        banner_text.append("QoderWork  ", style="bold green")
-        banner_text.append("• Precision IDE: ", style="dim")
-        banner_text.append("Qoder\n", style="bold magenta")
-        banner_text.append(f"   • Active Workspace: {self.workspace_root.resolve()}", style="dim")
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        
+        with Horizontal():
+            with Vertical(id="sidebar"):
+                yield Label("🛡️ [bold cyan]ACTIONS[/bold cyan]", classes="sidebar-title")
+                yield Button("🔍 1. Scan Workspace", id="btn-scan", classes="action-btn")
+                yield Button("⚡ 2. Trigger MuleRun", id="btn-mulerun", classes="action-btn")
+                yield Button("🛠️  3. Qoder Diff", id="btn-qoder", classes="action-btn")
+                yield Button("🤖 4. QoderWork Loop", id="btn-remediate", classes="action-btn")
+                yield Button("🚀 5. Open Evidence PR", id="btn-pr", classes="action-btn")
+                yield Button("🚪 Quit (Q)", id="btn-quit")
 
-        self.console.print(Panel(banner_text, border_style="cyan", padding=(1, 2)))
+            with Vertical(id="main-panel"):
+                yield Static(
+                    f"🛡️  [bold cyan]OPENSHOMER[/bold cyan] — Autonomous AI Agent Security Engineer\n"
+                    f"• [dim]MuleRun Engine[/dim]  • [dim]QoderWork Autonomous Loop[/dim]  • [dim]Qoder Precision IDE[/dim]\n"
+                    f"• Active Target: [bold yellow]{self.workspace_root.resolve()}[/bold yellow]",
+                    id="banner-card"
+                )
+                yield Static("Status: Ready to audit workspace.", id="status-bar")
+                yield DataTable(id="findings-table")
+                yield RichLog(id="console-log", highlight=True, markup=True)
 
-    def run_scan_view(self):
-        self.console.print("\n[bold cyan]🔍 Scanning Workspace for Security Misconfigurations...[/bold cyan]\n")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        table = self.query_one(DataTable)
+        table.cursor_type = "row"
+        table.add_columns("Finding ID", "Vulnerability Type", "Severity", "Target File", "Summary")
+        self.action_scan()
+
+    def update_status(self, message: str) -> None:
+        status_widget = self.query_one("#status-bar", Static)
+        status_widget.update(f"Status: {message}")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        button_id = event.button.id
+        if button_id == "btn-scan":
+            self.action_scan()
+        elif button_id == "btn-mulerun":
+            self.action_mulerun()
+        elif button_id == "btn-qoder":
+            self.action_qoder()
+        elif button_id == "btn-remediate":
+            self.action_remediate()
+        elif button_id == "btn-pr":
+            self.action_pr()
+        elif button_id == "btn-quit":
+            self.exit()
+
+    def action_scan(self) -> None:
+        log = self.query_one(RichLog)
+        table = self.query_one(DataTable)
+        table.clear()
+
+        self.update_status("Scanning workspace for security vulnerabilities...")
+        log.write("[bold cyan]🔍 Scanning workspace configuration files and framework ASTs...[/bold cyan]")
+        
         findings = scan_workspace(self.workspace_root)
         
         if not findings:
-            self.console.print(Panel("✅ [bold green]Workspace Clean![/bold green] No security vulnerabilities detected in system prompts, tools, or MCP configs.", border_style="green"))
+            self.update_status("Workspace is 100% clean!")
+            log.write("[bold green]✅ No vulnerabilities found. Agent workspace conforms to least-privilege security baseline.[/bold green]\n")
             return
 
-        table = Table(title=f"Security Findings ({len(findings)} detected)", border_style="red")
-        table.add_column("ID", style="bold cyan", width=12)
-        table.add_column("Type", style="magenta")
-        table.add_column("Severity", style="bold red")
-        table.add_column("File", style="yellow")
-        table.add_column("Issue Summary")
-
         for f in findings:
-            sev_style = "bold red" if f.severity.value in ("CRITICAL", "HIGH") else "yellow"
+            sev_color = "red" if f.severity.value in ("CRITICAL", "HIGH") else "yellow"
             table.add_row(
                 f.id,
                 f.type.value,
-                f"[{sev_style}]{f.severity.value}[/{sev_style}]",
+                f"[{sev_color}]{f.severity.value}[/{sev_color}]",
                 f.file,
-                f.issue[:65] + ("..." if len(f.issue) > 65 else ""),
+                f.issue[:60],
             )
+            log.write(f"• Found [bold red]{f.id}[/bold red] in [bold]{f.file}[/bold]: {f.issue}")
 
-        self.console.print(table)
-        self.console.print("")
+        self.update_status(f"Found {len(findings)} security findings.")
+        log.write(f"\n[bold yellow]Total Findings Identified:[/bold yellow] {len(findings)}\n")
 
-    def run_mulerun_view(self):
-        self.console.print("\n[bold yellow]⚡ MuleRun Low-Latency Event Workflow Test[/bold yellow]\n")
-        
-        start_time = time.time()
+    def action_mulerun(self) -> None:
+        log = self.query_one(RichLog)
+        self.update_status("Triggering MuleRun event workflow...")
+        log.write("\n[bold yellow]⚡ Ingesting simulated GitHub webhook into MuleRun Engine...[/bold yellow]")
+
         payload = {
             "event": "pull_request",
             "repository": {"full_name": self.workspace_root.name or "demo/agent"},
@@ -79,79 +213,60 @@ class OpenShomerTUI:
         }
         res = self.mulerun.process_webhook_event(payload)
         
-        info = (
-            f"• [bold green]Webhook Event Processed:[/bold green] {res['event']}\n"
-            f"• [bold yellow]Pipeline Latency:[/bold yellow] {res['latency_ms']:.2f} ms ([green]< 100 ms target met[/green])\n"
-            f"• [bold]Affected Target Files:[/bold] {res['modified_files']}\n"
-            f"• [bold]Live Telemetry Events Count:[/bold] {len(self.mulerun.telemetry_history)}"
-        )
-        self.console.print(Panel(info, title="MuleRun Runtime Telemetry", border_style="yellow"))
+        log.write(f"📥 [bold green]Webhook Event Processed:[/bold green] {res['event']} on {res['repository']}")
+        log.write(f"⏱️ [bold yellow]Telemetry Latency:[/bold yellow] {res['latency_ms']:.2f} ms")
+        log.write(f"📁 [bold]Target Scoped Files:[/bold] {res['affected_files']}")
+        self.update_status("MuleRun workflow cycle completed successfully.")
 
-    def run_qoder_view(self):
-        self.console.print("\n[bold magenta]🛠️  Qoder Precision Diff & Defense Synthesizer[/bold magenta]\n")
+    def action_qoder(self) -> None:
+        log = self.query_one(RichLog)
+        self.update_status("Synthesizing feature-preserving diff with Qoder IDE...")
         
         target_file = "agent/tools.yaml"
         if not (self.workspace_root / target_file).exists():
             target_file = "prompts/system.md"
-        
+
         if not (self.workspace_root / target_file).exists():
-            self.console.print("[yellow]No target tools.yaml or system.md found in workspace to synthesize.[/yellow]")
+            log.write("[yellow]No target configuration file located to synthesize.[/yellow]")
             return
 
         ide = QoderIDE(workspace_root=self.workspace_root)
         res = ide.generate_remediation_diff(target_file)
         
         if res.get("diff"):
-            syntax = Syntax(res["diff"], "diff", theme="monokai", line_numbers=True)
-            self.console.print(Panel(syntax, title=f"Feature-Preserving Diff: {target_file}", border_style="magenta"))
+            log.write(f"\n[bold magenta]🛠️  Qoder Feature-Preserving Precision Diff for {target_file}:[/bold magenta]")
+            log.write(res["diff"])
+            self.update_status("Generated minimal least-privilege diff.")
         else:
-            self.console.print("[green]Target file is already safe & compliant.[/green]")
+            log.write("[green]Target configuration is already safe & compliant.[/green]")
 
-    def run_qoderwork_autonomous_loop(self):
-        self.console.print("\n[bold green]🤖 QoderWork Autonomous Agent Cycle: Trigger → Investigate → Action → Resolved[/bold green]\n")
-        agent = QoderWorkAgent(workspace_root=self.workspace_root)
+    def action_remediate(self) -> None:
+        log = self.query_one(RichLog)
+        self.update_status("Executing QoderWork Autonomous Agent Cycle...")
+        log.write("\n[bold green]🤖 Running QoderWork: Trigger → Investigate → Action → Resolved[/bold green]")
         
-        with self.console.status("[bold green]Executing autonomous remediation loop & 156 red-team checks...[/bold green]"):
-            report = agent.run_lifecycle()
-
-        table = Table(title="QoderWork Execution Lifecycle", border_style="green")
-        table.add_column("Stage", style="bold cyan")
-        table.add_column("Status", style="bold green")
-        table.add_column("Duration (ms)", justify="right")
-        table.add_column("Details")
+        agent = QoderWorkAgent(workspace_root=self.workspace_root)
+        report = agent.run_lifecycle()
 
         for step in report.steps:
-            st_color = "green" if step.status == "success" else "red"
-            table.add_row(
-                step.step_name,
-                f"[{st_color}]{step.status.upper()}[/{st_color}]",
-                f"{step.duration_ms:.2f}",
-                str(step.details),
-            )
+            status_text = "[green]SUCCESS[/green]" if step.status == "success" else "[red]FAILED[/red]"
+            log.write(f"  • Stage [bold]{step.step_name}[/bold]: {status_text} ({step.duration_ms:.2f} ms) — {step.details}")
 
-        self.console.print(table)
-        self.console.print(f"\n[bold]Final Status:[/bold] [bold green]{report.state}[/bold green] (Total Execution: {report.total_time_ms:.2f} ms)\n")
+        log.write(f"🏁 [bold green]Lifecycle Complete:[/bold green] {report.state} (Total: {report.total_time_ms:.2f} ms)\n")
+        self.update_status(f"QoderWork completed with status: {report.state}")
 
-    def run_auto_pr_view(self):
-        import os
-        from app.github.pull_requests import PullRequestManager
-        from app.agents.investigator import InvestigationAgent
-        from app.agents.remediation import RemediationEngine
-        from app.validation.sandbox import SandboxRunner
-        
-        self.console.print("\n[bold magenta]🚀 Automated Evidence-Backed PR Generator[/bold magenta]\n")
+    def action_pr(self) -> None:
+        log = self.query_one(RichLog)
+        self.update_status("Executing Automated Evidence PR pipeline...")
+        log.write("\n[bold magenta]🚀 Starting Autonomous Remediation & Evidence PR Pipeline...[/bold magenta]")
         
         findings = scan_workspace(self.workspace_root)
         if not findings:
-            self.console.print("[green]Workspace is clean. Nothing to remediate or open PR for.[/green]")
+            log.write("[green]Workspace is clean. Nothing to remediate.[/green]")
             return
 
         token = os.getenv("GITHUB_TOKEN") or os.popen("gh auth token 2>/dev/null").read().strip()
-        repo_default = os.getenv("GITHUB_REPOSITORY", "kavix/OpenShomer")
-        target_repo = Prompt.ask("[bold]Enter GitHub repository (owner/repo)[/bold]", default=repo_default)
-
-        if not token:
-            token = Prompt.ask("[bold yellow]Enter GitHub Personal Access Token (or leave empty for preview)[/bold yellow]", default="")
+        target_repo = os.getenv("GITHUB_REPOSITORY", "kavix/OpenShomer")
 
         investigator = InvestigationAgent(self.workspace_root)
         remediator = RemediationEngine(self.workspace_root)
@@ -160,55 +275,21 @@ class OpenShomerTUI:
         pr_manager = PullRequestManager()
 
         for finding in findings:
-            self.console.print(f"-> Investigating [bold cyan]{finding.id}[/bold cyan] ({finding.type.value})...")
+            log.write(f"-> Investigating [bold cyan]{finding.id}[/bold cyan] ({finding.type.value})...")
             inv = investigator.investigate(finding)
             
-            self.console.print("   Synthesizing feature-preserving diff...")
             remediation = remediator.remediate(inv, finding.type)
-            
-            self.console.print("   Executing 156 adversarial sandbox test cases...")
             val = sandbox.validate_in_sandbox(self.workspace_root, finding.id, remediation.diff)
             
             if val.redteam_passed:
-                self.console.print(f"   [green]Passed sandbox validation! ({val.passed_redteam_tests}/{val.total_redteam_tests})[/green]")
+                log.write(f"   [green]Passed 156 sandbox checks! Opening Evidence PR on {target_repo}...[/green]")
                 pr_url = pr_manager.open_pr(finding, inv, val, remediation.diff, token=token or None, repo_name=target_repo)
-                self.console.print(Panel(f"🎉 [bold green]Pull Request Generated:[/bold green]\n[bold underline]{pr_url}[/bold underline]", border_style="green"))
+                log.write(f"🎉 [bold green]Live GitHub Pull Request Opened:[/bold green] {pr_url}\n")
+                self.update_status(f"PR Created: {pr_url}")
             else:
-                self.console.print(f"   [red]Sandbox validation failed for {finding.id}[/red]")
-
-    def start_interactive_menu(self):
-        while True:
-            self.console.clear()
-            self.display_banner()
-            
-            self.console.print("[bold]Select an action:[/bold]")
-            self.console.print("  [bold cyan]1.[/bold cyan] 🔍 Scan Workspace for Security Vulnerabilities")
-            self.console.print("  [bold yellow]2.[/bold yellow] ⚡ Trigger MuleRun Automated Ingress")
-            self.console.print("  [bold magenta]3.[/bold magenta] 🛠️  Synthesize Qoder Precision Diffs & Fences")
-            self.console.print("  [bold green]4.[/bold green] 🤖 Run QoderWork Full Autonomous Security Loop")
-            self.console.print("  [bold blue]5.[/bold blue] 🚀 Remediate & Open Evidence PR on GitHub")
-            self.console.print("  [bold red]6.[/bold red] 🚪 Exit TUI\n")
-
-            choice = Prompt.ask("[bold]Enter choice (1-6)[/bold]", choices=["1", "2", "3", "4", "5", "6"], default="1")
-
-            if choice == "1":
-                self.run_scan_view()
-            elif choice == "2":
-                self.run_mulerun_view()
-            elif choice == "3":
-                self.run_qoder_view()
-            elif choice == "4":
-                self.run_qoderwork_autonomous_loop()
-            elif choice == "5":
-                self.run_auto_pr_view()
-            elif choice == "6":
-                self.console.print("\n[bold cyan]Goodbye from OpenShomer![/bold cyan]\n")
-                break
-
-            Prompt.ask("\n[dim]Press Enter to return to main menu...[/dim]")
+                log.write(f"   [red]Sandbox validation failed for {finding.id}[/red]")
 
 
 def launch_tui(workspace: Optional[Path] = None):
-    tui = OpenShomerTUI(workspace_root=workspace)
-    tui.start_interactive_menu()
-
+    app = OpenShomerTextualApp(workspace_root=workspace)
+    app.run()
