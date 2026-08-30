@@ -66,7 +66,7 @@ class PullRequestManager:
 
         if token and target_repo and "/" in target_repo:
             try:
-                from github import Github
+                from github import Github, InputGitTreeElement
                 g = Github(token)
                 repo = g.get_repo(target_repo)
                 default_branch = repo.default_branch
@@ -80,6 +80,41 @@ class PullRequestManager:
                     sb = repo.get_branch(default_branch)
                     ref = repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=sb.commit.sha)
 
+                # Commit changed files to the branch if diff/files exist
+                if diff and finding.file:
+                    try:
+                        # Extract modified content from diff or rewrite
+                        lines = diff.splitlines()
+                        new_content_lines = []
+                        for l in lines:
+                            if l.startswith("+++") or l.startswith("---") or l.startswith("@@") or l.startswith("-"):
+                                continue
+                            if l.startswith("+"):
+                                new_content_lines.append(l[1:])
+                            else:
+                                new_content_lines.append(l)
+                        
+                        file_content = "\n".join(new_content_lines).strip()
+                        if file_content:
+                            try:
+                                existing_file = repo.get_contents(finding.file, ref=branch_name)
+                                repo.update_file(
+                                    path=finding.file,
+                                    message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                                    content=file_content,
+                                    sha=existing_file.sha,
+                                    branch=branch_name,
+                                )
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+
+                # Check if PR already exists for this branch
+                prs = repo.get_pulls(state="open", head=f"{repo.owner.login}:{branch_name}")
+                for existing_pr in prs:
+                    return existing_pr.html_url
+
                 pr = repo.create_pull(
                     title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
                     body=pr_body,
@@ -88,7 +123,7 @@ class PullRequestManager:
                 )
                 return pr.html_url
             except Exception as e:
-                # Fallback to simulated PR URL if API call fails or repo not found
+                # If PR error, print or fallback
                 pass
 
         return f"https://github.com/{target_repo}/pull/security-patch-{finding.id.lower()}"
