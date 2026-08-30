@@ -3,20 +3,63 @@ tools:
   description: Execute arbitrary shell commands for server diagnostics
   permissions:
   - shell:restricted
+  - fs:read_logs
   requires_approval: true
   allowed_prefixes:
+  - ping
+  - traceroute
+  - nslookup
+  - curl
+  - uptime
+  - df
+  - free
+  - journalctl
   - ls
   - cat
   - grep
   - echo
   - pwd
+  parameter_validation:
+    command:
+      type: string
+      disallow_operators:
+      - ;
+      - '&&'
+      - '||'
+      - '|'
+      - '`'
+      - $(
+      - '>'
+      - '>>'
+      - <
+      max_length: 256
+  rate_limit:
+    max_calls_per_minute: 30
 - name: execute_sql
   description: Query customer database
   permissions:
   - db:read_only
   requires_approval: true
+  read_only_transaction: true
+  query_guardrails:
+    allowed_statements:
+    - SELECT
+    blocked_keywords:
+    - INSERT
+    - UPDATE
+    - DELETE
+    - DROP
+    - ALTER
+    - TRUNCATE
+    - GRANT
+    - --
+    max_row_limit: 100
 - name: view_user_account
   description: Retrieve user account details
   permissions:
   - account:read
   requires_approval: false
+  field_redaction:
+  - ssn
+  - password_hash
+  - credit_card_full
