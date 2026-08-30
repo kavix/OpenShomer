@@ -37,8 +37,10 @@ openshomer-mcp = "app.mcp.server:main"
 
 [dependency-groups]
 dev = [
+    "coverage>=7.16.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [tool.uv]
