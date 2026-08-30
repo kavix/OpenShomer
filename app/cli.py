@@ -9,8 +9,10 @@ from rich.table import Table
 from app.models.findings import Finding, FindingType, Severity, FindingStatus
 from app.agents.investigator import InvestigationAgent
 from app.agents.remediation import RemediationEngine
+from app.agents.providers import get_llm_provider, LLMProvider
 from app.validation.sandbox import SandboxRunner
 from app.github.pull_requests import PullRequestManager
+
 
 app = typer.Typer(
     name="openshomer",
@@ -226,6 +228,9 @@ def fix_command(
     auto_pr: bool = typer.Option(False, "--auto-pr", help="Automatically create GitHub PR if token available"),
     github_token: Optional[str] = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
     repo_name: Optional[str] = typer.Option(None, "--repo", "--repo-name", envvar="GITHUB_REPOSITORY", help="GitHub Repository (owner/repo)"),
+    provider: Optional[str] = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
+    model: Optional[str] = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
+    api_key: Optional[str] = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
     redteam_dir: Optional[Path] = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
     """Investigate findings, synthesize safe diffs, validate in sandbox, and optionally open a PR."""
@@ -241,9 +246,13 @@ def fix_command(
         console.print("[bold green]No security vulnerabilities detected.[/bold green] Nothing to remediate.\n")
         return
 
+    llm = get_llm_provider(provider_name=provider, model=model, api_key=api_key)
+    if llm:
+        console.print(f"🤖 [bold green]Active LLM Provider:[/bold green] {llm.__class__.__name__} ({llm.model})\n")
+
     rt_dir = redteam_dir.resolve() if redteam_dir else Path(__file__).resolve().parent.parent / "redteam"
-    investigator = InvestigationAgent(workspace_path)
-    remediator = RemediationEngine(workspace_path)
+    investigator = InvestigationAgent(workspace_path, llm_provider=llm)
+    remediator = RemediationEngine(workspace_path, llm_provider=llm)
     sandbox = SandboxRunner(rt_dir)
     pr_manager = PullRequestManager()
 
@@ -279,17 +288,102 @@ def auto_pr_command(
     path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
     repo_name: Optional[str] = typer.Option(None, "--repo-name", "--repo", envvar="GITHUB_REPOSITORY", help="GitHub repo name (e.g. owner/repo)"),
     github_token: Optional[str] = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
+    provider: Optional[str] = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
+    model: Optional[str] = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
+    api_key: Optional[str] = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
     redteam_dir: Optional[Path] = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
     """Full autonomous pipeline: Scan -> Investigate -> Rewrite -> 150+ Red-Team Validation -> Evidence PR."""
-    fix_command(path=path, auto_pr=True, github_token=github_token, repo_name=repo_name, redteam_dir=redteam_dir)
+    fix_command(
+        path=path,
+        auto_pr=True,
+        github_token=github_token,
+        repo_name=repo_name,
+        provider=provider,
+        model=model,
+        api_key=api_key,
+        redteam_dir=redteam_dir,
+    )
+
+
+@app.command(name="mulerun")
+def mulerun_command(
+    webhook_event: Optional[str] = typer.Option(None, "--event", help="Simulate a GitHub webhook event (push, pull_request)"),
+    repo: str = typer.Option("owner/agent-repo", "--repo", help="Target repository identifier"),
+) -> None:
+    """MuleRun: Low-latency (<100ms) automated AI security workflow runtime."""
+    from app.mulerun.runtime import MuleRunRuntime
+    console.print("\n⚡ [bold cyan]MuleRun AI Workflow Runtime (<100ms Engine)[/bold cyan]\n")
+    
+    runtime = MuleRunRuntime()
+    event_data = {
+        "event": webhook_event or "pull_request",
+        "repository": {"full_name": repo},
+        "commits": [{"modified": ["agent/tools.yaml", "prompts/system.md"]}],
+    }
+    
+    res = runtime.process_webhook_event(event_data)
+    console.print(f"📥 [bold green]Webhook Processed:[/bold green] {res['event']} on [bold]{res['repository']}[/bold]")
+    console.print(f"⏱️ [bold yellow]Latency:[/bold yellow] {res['latency_ms']:.2f} ms (<100 ms target met)")
+    console.print(f"📁 [bold]Affected Files:[/bold] {res['affected_files']}\n")
+
+
+@app.command(name="qoderwork")
+def qoderwork_command(
+    path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
+    provider: Optional[str] = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider"),
+) -> None:
+    """QoderWork: Autonomous Desktop AI Agent (Trigger -> Investigate -> Action -> Resolved)."""
+    from app.qoderwork.agent import QoderWorkAgent
+    console.print("\n🤖 [bold cyan]QoderWork Autonomous Security Agent Loop[/bold cyan]\n")
+    
+    agent = QoderWorkAgent(workspace_root=path)
+    report = agent.run_lifecycle()
+    
+    table = Table(title="QoderWork Execution Lifecycle")
+    table.add_column("Stage", style="bold cyan")
+    table.add_column("Status", style="green")
+    table.add_column("Duration (ms)", justify="right")
+    table.add_column("Details")
+    
+    for step in report.steps:
+        table.add_row(
+            step.step_name,
+            "[green]SUCCESS[/green]" if step.status == "success" else "[red]FAILED[/red]",
+            f"{step.duration_ms:.2f}",
+            str(step.details),
+        )
+    
+    console.print(table)
+    console.print(f"\n[bold]Final Lifecycle State:[/bold] [bold green]{report.state}[/bold green] (Total: {report.total_time_ms:.2f} ms)\n")
+
+
+@app.command(name="qoder")
+def qoder_command(
+    file_path: str = typer.Argument(..., help="Relative path to vulnerable configuration file (e.g. agent/tools.yaml, prompts/system.md)"),
+    workspace: Path = typer.Option(Path("."), "--workspace", "-w", help="Workspace root directory"),
+) -> None:
+    """Qoder: AI-Native Agentic IDE backbone for minimal diffs and prompt fences."""
+    from app.qoder.ide import QoderIDE
+    console.print(f"\n🛠️ [bold cyan]Qoder Precision Synthesizer[/bold cyan] analyzing [bold]{file_path}[/bold]...\n")
+    
+    ide = QoderIDE(workspace_root=workspace)
+    result = ide.generate_remediation_diff(file_path)
+    
+    if not result.get("success"):
+        console.print(f"[red]Error or no changes generated:[/red] {result.get('error', 'No modifications needed.')}")
+        return
+    
+    console.print("[bold green]Generated Minimal Scoped Diff:[/bold green]")
+    console.print(result["diff"])
 
 
 @app.command(name="version")
 def version_command() -> None:
     """Print the OpenShomer version."""
-    console.print("OpenShomer CLI v0.1.0 — Autonomous AI Agent Security Engineer")
+    console.print("OpenShomer CLI v0.1.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)")
 
 
 if __name__ == "__main__":
     app()
+

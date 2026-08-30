@@ -329,6 +329,9 @@ openshomer scan demo/vulnerable-agent --json
 
 # Run autonomous remediation and open an evidence-backed Pull Request
 openshomer fix demo/vulnerable-agent --auto-pr
+
+# Run remediation powered by Alibaba Cloud Qwen reasoning
+openshomer fix demo/vulnerable-agent --provider alibaba --model qwen-plus --auto-pr
 ```
 
 ### GitHub Actions CI/CD Integration
@@ -353,17 +356,22 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           scan_path: "."
           exit_code: "true"
+          dashscope_api_key: ${{ secrets.DASHSCOPE_API_KEY }}
 ```
 
 ## Supported LLM Providers
 
-OpenShomer supports the following LLM providers:
+OpenShomer features dynamic multi-provider reasoning with native support for:
 
-- Anthropic
-- Gemini
-- OpenAI
-- Mistral AI
-- NVIDIA NIM
+- **Alibaba Cloud Model Studio (Bailian / DashScope)**: `qwen-max`, `qwen-plus`, `qwen-turbo`, `qwen-coder-plus` (`DASHSCOPE_API_KEY` or `ALIBABA_CLOUD_API_KEY`)
+- **Anthropic**: `claude-3-5-sonnet`, `claude-3-haiku` (`ANTHROPIC_API_KEY`)
+- **Google Gemini**: `gemini-1.5-pro`, `gemini-1.5-flash` (`GEMINI_API_KEY`)
+- **OpenAI**: `gpt-4o`, `gpt-4o-mini` (`OPENAI_API_KEY`)
+- **Mistral AI**: `mistral-large`, `codestral` (`MISTRAL_API_KEY`)
+- **NVIDIA NIM**: `meta/llama-3.1-70b-instruct` (`NVIDIA_API_KEY`)
+
+*Note: OpenShomer operates with zero required external dependencies in zero-config mode, falling back to deterministic AST and policy verification if no API keys are set.*
+
 
 
 Without Make: `uv sync`, `uv run pytest -v`, and `uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.

@@ -1,15 +1,18 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from app.models.findings import Finding, FindingType, Severity, InvestigationResult
 from app.agents.tools import AgentRepoTools
+from app.agents.providers import LLMProvider, get_llm_provider
+
 
 
 class InvestigationAgent:
     """Autonomous agent that analyzes prompts, tools, and MCP configs against findings."""
 
-    def __init__(self, workspace_root: Path):
+    def __init__(self, workspace_root: Path, llm_provider: Optional[LLMProvider] = None):
         self.workspace_root = workspace_root
         self.tools = AgentRepoTools(workspace_root)
+        self.llm_provider = llm_provider or get_llm_provider()
 
     def investigate(self, finding: Finding) -> InvestigationResult:
         affected_files = [finding.file]

@@ -2,17 +2,19 @@ import difflib
 import json
 import yaml
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from app.models.findings import InvestigationResult, RemediationResult, FindingType
 from app.validation.guardrails import PatchGuardrails
+from app.agents.providers import LLMProvider, get_llm_provider
 
 
 class RemediationEngine:
     """Generates minimal safe rewrites for prompts, tool definitions, and MCP configs."""
 
-    def __init__(self, workspace_root: Path):
+    def __init__(self, workspace_root: Path, llm_provider: Optional[LLMProvider] = None):
         self.workspace_root = workspace_root
         self.guardrails = PatchGuardrails()
+        self.llm_provider = llm_provider or get_llm_provider()
 
     def remediate(self, investigation: InvestigationResult, finding_type: FindingType) -> RemediationResult:
         modified_files: List[str] = []

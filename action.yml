@@ -1,4 +1,4 @@
-﻿name: "OpenShomer AI Agent Security Action"
+name: "OpenShomer AI Agent Security Action"
 description: "Autonomous security engineer that finds AI agent config risks, red-teams minimal safe patches in a sandbox, and opens evidence-backed PRs."
 author: "OpenShomer Maintainers"
 branding:
@@ -22,6 +22,12 @@ inputs:
     description: "Exit with code 1 on HIGH or CRITICAL findings in CI gates"
     required: false
     default: "true"
+  dashscope_api_key:
+    description: "Optional Alibaba Cloud DashScope / Qwen API key"
+    required: false
+  openai_api_key:
+    description: "Optional OpenAI API key"
+    required: false
   gemini_api_key:
     description: "Optional Gemini API key for dynamic LLM reasoning"
     required: false
@@ -48,6 +54,8 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
+        DASHSCOPE_API_KEY: ${{ inputs.dashscope_api_key }}
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
       run: |
