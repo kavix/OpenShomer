@@ -10,15 +10,22 @@ tools:
   - traceroute
   - nslookup
   - curl
+  - wget
   - uptime
   - df
   - free
   - journalctl
+  - systemctl status
+  - docker ps
+  - kubectl get
   - ls
   - cat
   - grep
   - echo
   - pwd
+  - head
+  - tail
+  - wc
   parameter_validation:
     command:
       type: string
@@ -32,9 +39,9 @@ tools:
       - '>'
       - '>>'
       - <
-      max_length: 256
+      max_length: 512
   rate_limit:
-    max_calls_per_minute: 30
+    max_calls_per_minute: 60
 - name: execute_sql
   description: Query customer database
   permissions:
@@ -44,6 +51,9 @@ tools:
   query_guardrails:
     allowed_statements:
     - SELECT
+    - EXPLAIN
+    - SHOW
+    - DESCRIBE
     blocked_keywords:
     - INSERT
     - UPDATE
@@ -53,7 +63,9 @@ tools:
     - TRUNCATE
     - GRANT
     - --
-    max_row_limit: 100
+    - ;
+    max_row_limit: 500
+    query_timeout_seconds: 5
 - name: view_user_account
   description: Retrieve user account details
   permissions:
@@ -63,3 +75,7 @@ tools:
   - ssn
   - password_hash
   - credit_card_full
+  - cvv
+  - salt
+  - secret_key
+  masking_policy: show_last_4_digits
