@@ -4,10 +4,7 @@
 
 OpenShomer discovers risky patterns in AI agent configurations, investigates the full agent graph, generates minimal safe rewrites, validates them with adversarial red-teaming inside an isolated Docker sandbox, and opens evidence-backed pull requests.
 
-> Detection is not enough. OpenShomer closes the loop
->
-> 
-> **Find → Investigate → Rewrite → Red-team → Prove → PR**.
+> Detection is not enough. OpenShomer closes the loop: **Find → Investigate → Rewrite → Red-team → Prove → PR**.
 
 <div align="center">
 
@@ -269,7 +266,14 @@ OpenShomer/
 │   │   ├── skills.py                # Skill files (SKILL.md, skills/*) security scanner
 │   │   ├── langchain.py             # LangChain tool and runaway executor scanner
 │   │   ├── llamaindex.py            # LlamaIndex FunctionTool & ReActAgent scanner
-│   │   └── crewai.py                # CrewAI multi-agent delegation scanner
+│   │   ├── crewai.py                # CrewAI multi-agent delegation scanner
+│   │   └── rag_security.py          # RAG & vector store context poisoning inspector
+│   ├── hitl/
+│   │   └── gates.py                 # Cryptographic HMAC-SHA256 human approval gate provider
+│   ├── runtime/
+│   │   └── firewall.py              # In-line streaming AI firewall & proxy sidecar
+│   ├── redteam/
+│   │   └── multiturn.py             # Multi-turn crescendo attacks & tool-chaining redteam
 │   ├── models/
 │   │   └── findings.py              # Pydantic schemas (Finding, Severity, InvestigationResult, etc.)
 │   ├── agents/
