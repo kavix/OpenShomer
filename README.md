@@ -4,7 +4,8 @@
 
 OpenShomer discovers risky patterns in AI agent configurations, investigates the full agent graph, generates minimal safe rewrites, validates them with adversarial red-teaming inside an isolated Docker sandbox, and opens evidence-backed pull requests.
 
-> Detection is not enough. OpenShomer closes the loop: **Find → Investigate → Rewrite → Red-team → Prove → PR**.
+> Detection is not enough. OpenShomer closes the loop
+> **Find → Investigate → Rewrite → Red-team → Prove → PR**.
 
 [![Watch Demo Video](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://youtu.be/b9bJ8YaUV3U)  
 🎬 **Demo Walkthrough Video:** [https://youtu.be/b9bJ8YaUV3U](https://youtu.be/b9bJ8YaUV3U)
