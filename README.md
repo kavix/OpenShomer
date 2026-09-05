@@ -7,8 +7,14 @@ OpenShomer discovers risky patterns in AI agent configurations, investigates the
 > Detection is not enough. OpenShomer closes the loop
 > **Find → Investigate → Rewrite → Red-team → Prove → PR**.
 
-[![Watch Demo Video](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://youtu.be/b9bJ8YaUV3U)  
-🎬 **Demo Walkthrough Video:** [https://youtu.be/b9bJ8YaUV3U](https://youtu.be/b9bJ8YaUV3U)
+<div align="center">
+
+[![Watch OpenShomer Demo Video](https://img.youtube.com/vi/b9bJ8YaUV3U/maxresdefault.jpg)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)
+
+[![Watch Demo on YouTube](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)  
+*▶️ Click the player preview above to watch the 3-minute OpenShomer walkthrough demo*
+
+</div>
 
 ---
 
