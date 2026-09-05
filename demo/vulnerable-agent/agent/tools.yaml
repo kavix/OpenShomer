@@ -1,20 +1,81 @@
 tools:
-  - name: run_shell
-    description: Execute arbitrary shell commands for server diagnostics
-    permissions:
-      - "shell:unrestricted"
-      - "fs:write_all"
-    requires_approval: false
-    allowed_prefixes: []
-
-  - name: execute_sql
-    description: Query customer database
-    permissions:
-      - "db:read_write_unrestricted"
-    requires_approval: false
-
-  - name: view_user_account
-    description: Retrieve user account details
-    permissions:
-      - "account:read"
-    requires_approval: false
+- name: run_shell
+  description: Execute arbitrary shell commands for server diagnostics
+  permissions:
+  - shell:restricted
+  - fs:read_logs
+  requires_approval: true
+  allowed_prefixes:
+  - ping
+  - traceroute
+  - nslookup
+  - curl
+  - wget
+  - uptime
+  - df
+  - free
+  - journalctl
+  - systemctl status
+  - docker ps
+  - kubectl get
+  - ls
+  - cat
+  - grep
+  - echo
+  - pwd
+  - head
+  - tail
+  - wc
+  parameter_validation:
+    command:
+      type: string
+      disallow_operators:
+      - ;
+      - '&&'
+      - '||'
+      - '|'
+      - '`'
+      - $(
+      - '>'
+      - '>>'
+      - <
+      max_length: 512
+  rate_limit:
+    max_calls_per_minute: 60
+- name: execute_sql
+  description: Query customer database
+  permissions:
+  - db:read_only
+  requires_approval: true
+  read_only_transaction: true
+  query_guardrails:
+    allowed_statements:
+    - SELECT
+    - EXPLAIN
+    - SHOW
+    - DESCRIBE
+    blocked_keywords:
+    - INSERT
+    - UPDATE
+    - DELETE
+    - DROP
+    - ALTER
+    - TRUNCATE
+    - GRANT
+    - --
+    - ;
+    max_row_limit: 500
+    query_timeout_seconds: 5
+- name: view_user_account
+  description: Retrieve user account details
+  permissions:
+  - account:read
+  requires_approval: false
+  field_redaction:
+  - ssn
+  - password_hash
+  - credit_card_full
+  - cvv
+  - salt
+  - secret_key
+  masking_policy: show_last_4_digits
