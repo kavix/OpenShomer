@@ -1,0 +1,52 @@
+name: "✨ Feature Request"
+description: "Suggest an idea or new security capability for OpenShomer."
+title: "feat: [Short summary of proposal]"
+labels: ["enhancement", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing a feature or improvement to OpenShomer!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem or security blind spot?
+      placeholder: Describe the problem or threat model...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution & Architecture
+      description: Describe the solution you'd like to see implemented.
+      placeholder: Detailed technical specification, AST checks, or security guardrails...
+    validations:
+      required: true
+  - type: dropdown
+    id: target_milestone
+    attributes:
+      label: Target Horizon / Category
+      options:
+        - Core Remediation Loop & Agentic Backbone
+        - Multi-Framework & Agent Graphs (LangChain, LlamaIndex, CrewAI)
+        - Advanced Red-Teaming & Jailbreaks (v0.3)
+        - RAG & Vector Memory Security (v0.4)
+        - Runtime AI Firewall & Observability (v0.5)
+        - Developer Experience & IDE Plugins (v0.6)
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.
+    validations:
+      required: false
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution Willingness
+      options:
+        - label: I would be willing to submit a PR for this feature!
+          required: false
