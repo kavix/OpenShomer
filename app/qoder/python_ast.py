@@ -9,7 +9,7 @@ class PythonASTSynthesizer:
     """
 
     @classmethod
-    def harden_langchain_agent(cls, code: str) -> tuple[str, str]:
+    def harden_langchain_agent(cls, code: str) -> str:
         """Secures LangChain tools by removing dangerous return_direct=True and enforcing parameter schemas."""
         rewritten = code
         # 1. Neutralize return_direct=True on dangerous tools
@@ -22,7 +22,7 @@ class PythonASTSynthesizer:
         return rewritten
 
     @classmethod
-    def harden_llamaindex_tool(cls, code: str) -> tuple[str, str]:
+    def harden_llamaindex_tool(cls, code: str) -> str:
         """Secures LlamaIndex FunctionTools with parameter bounds and safe error handlers."""
         rewritten = code
         if "FunctionTool.from_defaults(" in rewritten and "validate_input" not in rewritten:
@@ -32,7 +32,7 @@ class PythonASTSynthesizer:
         return rewritten
 
     @classmethod
-    def harden_crewai_agent(cls, code: str) -> tuple[str, str]:
+    def harden_crewai_agent(cls, code: str) -> str:
         """Secures CrewAI Agent definitions by restricting unbounded delegation."""
         rewritten = code
         # Restrict allow_delegation=True

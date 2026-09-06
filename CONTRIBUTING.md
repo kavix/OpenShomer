@@ -29,6 +29,8 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
    ```bash
    make install
    make lint
+   make typecheck
+   make security-lint
    make test
    make run
    ```
@@ -39,6 +41,8 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
    uv sync
    uv run ruff check .
    uv run ruff format --check .
+   uv run mypy app tests
+   uv run bandit -c pyproject.toml -r --severity-level high app
    uv run pytest -v
    uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
@@ -58,7 +62,7 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 
 1. Create a feature branch (`git checkout -b feat/your-feature-name`).
 2. Ensure all tests pass (`make test` or `uv run pytest -v`).
-3. Run the lint and formatting checks (`make lint`). Use `make format` to apply safe fixes.
+3. Run the lint, type, and security checks (`make lint typecheck security-lint`). Use `make format` to apply safe fixes.
 4. Run `uv run pre-commit install` once to check future commits, or run all hooks directly with
    `uv run pre-commit run --all-files`.
 5. Commit with clear, descriptive messages following [Conventional Commits](https://www.conventionalcommits.org/).

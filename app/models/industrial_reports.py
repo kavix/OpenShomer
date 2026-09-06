@@ -16,7 +16,7 @@ class IndustrialReportExporter:
     @classmethod
     def export_sarif(cls, findings: list[Finding], workspace_root: Path) -> dict[str, Any]:
         """Generate OASIS SARIF v2.1.0 report for native GitHub Advanced Security & CI/CD tab ingestion."""
-        rules = []
+        rules: list[dict[str, Any]] = []
         results = []
         rule_indices = {}
 

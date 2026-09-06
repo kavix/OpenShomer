@@ -1,4 +1,4 @@
-.PHONY: install test lint format run scan tui auto-pr docker-build docker-run clean
+.PHONY: install test lint typecheck security-lint format run scan tui auto-pr docker-build docker-run clean
 
 install:
 	uv sync
@@ -9,6 +9,12 @@ test:
 lint:
 	uv run ruff check .
 	uv run ruff format --check .
+
+typecheck:
+	uv run mypy app tests
+
+security-lint:
+	uv run bandit -c pyproject.toml -r --severity-level high app
 
 format:
 	uv run ruff format .

@@ -43,12 +43,12 @@ class Finding(BaseModel):
     type: FindingType = Field(..., description="Classification of the security risk")
     severity: Severity = Field(..., description="Severity level")
     file: str = Field(..., description="Relative path to affected config/prompt file")
-    tool: str | None = Field(None, description="Affected tool or MCP server name")
+    tool: str | None = Field(default=None, description="Affected tool or MCP server name")
     issue: str = Field(..., description="Summary of the vulnerability")
     repository: str = Field(..., description="Repository or project name")
     status: FindingStatus = Field(default=FindingStatus.INGESTED, description="Current workflow status")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: dict[str, Any] | None = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class FindingReceipt(BaseModel):

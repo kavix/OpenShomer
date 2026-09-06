@@ -224,6 +224,8 @@ class PullRequestManager:
                             if rewritten_text and rewritten_text != original_text:
                                 try:
                                     branch_file = repo.get_contents(resolved_path, ref=branch_name)
+                                    if isinstance(branch_file, list):
+                                        raise ValueError(f"Expected file at {resolved_path}, found a directory")
                                     repo.update_file(
                                         path=resolved_path,
                                         message=f"Fix({finding.id}): {finding.issue[:60]}",
