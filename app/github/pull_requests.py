@@ -64,7 +64,7 @@ class PullRequestManager:
 
         tax = PullRequestManager.get_security_taxonomy_mapping(finding.type.value)
 
-        body = f"""## 🛡️ OpenShomer Security Remediation: {finding.id}
+        body = f"""## OpenShomer Security Remediation: {finding.id}
 
 ### Executive Summary
 - **Vulnerability Type:** `{finding.type.value}`
@@ -169,7 +169,7 @@ class PullRequestManager:
                 for p in repo.get_pulls(state="open"):
                     if branch_base == p.head.ref:
                         p.edit(
-                            title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                            title=f"Fix({finding.id}): {finding.issue[:60]}",
                             body=pr_body,
                         )
                         return p.html_url
@@ -226,7 +226,7 @@ class PullRequestManager:
                                     branch_file = repo.get_contents(resolved_path, ref=branch_name)
                                     repo.update_file(
                                         path=resolved_path,
-                                        message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                                        message=f"Fix({finding.id}): {finding.issue[:60]}",
                                         content=rewritten_text,
                                         sha=branch_file.sha,
                                         branch=branch_name,
@@ -234,7 +234,7 @@ class PullRequestManager:
                                 except Exception:
                                     repo.update_file(
                                         path=resolved_path,
-                                        message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                                        message=f"Fix({finding.id}): {finding.issue[:60]}",
                                         content=rewritten_text,
                                         sha=existing_file.sha,
                                         branch=branch_name,
@@ -245,7 +245,7 @@ class PullRequestManager:
                 # Open real pull request on GitHub
                 try:
                     pr = repo.create_pull(
-                        title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                        title=f"Fix({finding.id}): {finding.issue[:60]}",
                         body=pr_body,
                         head=branch_name,
                         base=default_branch,
@@ -273,13 +273,13 @@ class PullRequestManager:
                             if rewritten_text and rewritten_text != original_text:
                                 repo.update_file(
                                     path=resolved_path,
-                                    message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                                    message=f"Fix({finding.id}): {finding.issue[:60]}",
                                     content=rewritten_text,
                                     sha=existing_file.sha,
                                     branch=alt_branch,
                                 )
                     pr = repo.create_pull(
-                        title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                        title=f"Fix({finding.id}): {finding.issue[:60]}",
                         body=pr_body,
                         head=alt_branch,
                         base=default_branch,
