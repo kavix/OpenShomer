@@ -4,11 +4,13 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert response.json()["service"] == "OpenShomer"
+
 
 def test_ingest_and_get_finding():
     payload = {
@@ -18,7 +20,7 @@ def test_ingest_and_get_finding():
         "file": "agent/tools.yaml",
         "tool": "run_shell",
         "issue": "Shell tool has no human approval gate and unrestricted command scope",
-        "repository": "customer-support-agent"
+        "repository": "customer-support-agent",
     }
 
     post_resp = client.post("/findings", json=payload)

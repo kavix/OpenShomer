@@ -28,7 +28,6 @@ dependencies = [
     "orjson>=3.9.0",
     "msgpack>=1.0.0",
     "mcp>=1.0.0,<2",
-    "ruff>=0.16.5",
 ]
 
 [project.scripts]
@@ -38,9 +37,11 @@ openshomer-mcp = "app.mcp.server:main"
 [dependency-groups]
 dev = [
     "coverage>=7.16.0",
+    "pre-commit>=4.3.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=7.1.0",
+    "ruff>=0.16.5",
 ]
 
 [tool.uv]
@@ -51,9 +52,15 @@ testpaths = ["tests", "demo/vulnerable-agent/tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP"]
+
 [tool.setuptools.packages.find]
 include = ["app*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.yml", "*.md"]
-

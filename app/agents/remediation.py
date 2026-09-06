@@ -27,12 +27,14 @@ class RemediationEngine:
             rewritten_content = self._rewrite_file_content(rel_file, original_content, finding_type)
 
             if original_content != rewritten_content:
-                diff_lines = list(difflib.unified_diff(
-                    original_content.splitlines(keepends=True),
-                    rewritten_content.splitlines(keepends=True),
-                    fromfile=f"a/{rel_file}",
-                    tofile=f"b/{rel_file}"
-                ))
+                diff_lines = list(
+                    difflib.unified_diff(
+                        original_content.splitlines(keepends=True),
+                        rewritten_content.splitlines(keepends=True),
+                        fromfile=f"a/{rel_file}",
+                        tofile=f"b/{rel_file}",
+                    )
+                )
                 if diff_lines:
                     unified_diffs.append("".join(diff_lines))
                     modified_files.append(rel_file)
@@ -41,9 +43,7 @@ class RemediationEngine:
 
         # Apply guardrails
         is_valid, reason = self.guardrails.validate_patch(
-            diff=full_diff,
-            allowed_files=investigation.affected_files,
-            max_lines=300
+            diff=full_diff, allowed_files=investigation.affected_files, max_lines=300
         )
 
         return RemediationResult(
@@ -51,7 +51,7 @@ class RemediationEngine:
             diff=full_diff,
             modified_files=modified_files,
             guardrails_passed=is_valid,
-            rejection_reason=reason if not is_valid else None
+            rejection_reason=reason if not is_valid else None,
         )
 
     def _rewrite_file_content(self, filename: str, content: str, finding_type: FindingType) -> str:

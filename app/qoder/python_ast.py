@@ -1,59 +1,48 @@
-import ast
 import re
-from typing import Tuple
 
 
 class PythonASTSynthesizer:
     """Qoder Python AST Code Transformer.
-    
+
     Transforms Python source code for agent frameworks (LangChain, LlamaIndex, CrewAI, AutoGen)
     to inject safety guardrails, rate limits, and parameter bounds without breaking developer functionality.
     """
 
     @classmethod
-    def harden_langchain_agent(cls, code: str) -> Tuple[str, str]:
+    def harden_langchain_agent(cls, code: str) -> tuple[str, str]:
         """Secures LangChain tools by removing dangerous return_direct=True and enforcing parameter schemas."""
         rewritten = code
         # 1. Neutralize return_direct=True on dangerous tools
-        rewritten = re.sub(
-            r"return_direct\s*=\s*True",
-            "return_direct=False, handle_tool_error=True",
-            rewritten
-        )
+        rewritten = re.sub(r"return_direct\s*=\s*True", "return_direct=False, handle_tool_error=True", rewritten)
         # 2. Add max_iterations cap to agent executors
         if "AgentExecutor(" in rewritten and "max_iterations" not in rewritten:
             rewritten = rewritten.replace(
-                "AgentExecutor(",
-                "AgentExecutor(max_iterations=15, max_execution_time=60.0, "
+                "AgentExecutor(", "AgentExecutor(max_iterations=15, max_execution_time=60.0, "
             )
         return rewritten
 
     @classmethod
-    def harden_llamaindex_tool(cls, code: str) -> Tuple[str, str]:
+    def harden_llamaindex_tool(cls, code: str) -> tuple[str, str]:
         """Secures LlamaIndex FunctionTools with parameter bounds and safe error handlers."""
         rewritten = code
         if "FunctionTool.from_defaults(" in rewritten and "validate_input" not in rewritten:
             rewritten = rewritten.replace(
-                "FunctionTool.from_defaults(",
-                "FunctionTool.from_defaults(return_direct=False, "
+                "FunctionTool.from_defaults(", "FunctionTool.from_defaults(return_direct=False, "
             )
         return rewritten
 
     @classmethod
-    def harden_crewai_agent(cls, code: str) -> Tuple[str, str]:
+    def harden_crewai_agent(cls, code: str) -> tuple[str, str]:
         """Secures CrewAI Agent definitions by restricting unbounded delegation."""
         rewritten = code
         # Restrict allow_delegation=True
-        rewritten = re.sub(
-            r"allow_delegation\s*=\s*True",
-            "allow_delegation=False, max_iter=10",
-            rewritten
-        )
+        rewritten = re.sub(r"allow_delegation\s*=\s*True", "allow_delegation=False, max_iter=10", rewritten)
         return rewritten
 
     @classmethod
     def _cap_unbounded_top_k(cls, code: str) -> str:
         """Caps excessive retrieval breadth (top_k/k > 50) to a safe default of 10."""
+
         def _cap(match: re.Match) -> str:
             value = int(match.group(2))
             if value > 50:
@@ -79,7 +68,7 @@ class PythonASTSynthesizer:
                 elif source[i] == ")":
                     depth -= 1
                     if depth == 0:
-                        calls.append((open_idx, i, source[open_idx + 1:i]))
+                        calls.append((open_idx, i, source[open_idx + 1 : i]))
                         break
         return calls
 
@@ -89,7 +78,7 @@ class PythonASTSynthesizer:
         for open_idx, close_idx, args in reversed(cls._iter_named_calls(rewritten, func_name)):
             new_args = rewriter(args)
             if new_args != args:
-                rewritten = rewritten[:open_idx + 1] + new_args + rewritten[close_idx:]
+                rewritten = rewritten[: open_idx + 1] + new_args + rewritten[close_idx:]
         return rewritten
 
     @staticmethod
@@ -156,9 +145,8 @@ class PythonASTSynthesizer:
         """Injects mandatory tenant metadata filters and bounded k into LangChain retrievers."""
         rewritten = code
         is_langchain = "langchain" in rewritten.lower() or "VectorStoreRetriever" in rewritten
-        has_retriever = (
-            "VectorStoreRetriever" in rewritten
-            or (is_langchain and (".as_retriever(" in rewritten or "similarity_search(" in rewritten))
+        has_retriever = "VectorStoreRetriever" in rewritten or (
+            is_langchain and (".as_retriever(" in rewritten or "similarity_search(" in rewritten)
         )
         if not has_retriever:
             return rewritten
@@ -177,9 +165,7 @@ class PythonASTSynthesizer:
         """Injects mandatory tenant metadata filters and bounded similarity_top_k into LlamaIndex indexes."""
         rewritten = code
         is_llama = (
-            "llama_index" in rewritten.lower()
-            or "llamaindex" in rewritten.lower()
-            or "VectorStoreIndex" in rewritten
+            "llama_index" in rewritten.lower() or "llamaindex" in rewritten.lower() or "VectorStoreIndex" in rewritten
         )
         has_index = "VectorStoreIndex" in rewritten or (
             is_llama and (".as_retriever(" in rewritten or ".as_query_engine(" in rewritten)

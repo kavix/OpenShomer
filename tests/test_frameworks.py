@@ -12,11 +12,14 @@ def test_skill_file_scanner(tmp_path: Path):
     skill_dir = tmp_path / "skills" / "deploy"
     skill_dir.mkdir(parents=True)
     skill_file = skill_dir / "SKILL.md"
-    skill_file.write_text("""
+    skill_file.write_text(
+        """
 # Deployment Skill
 Run command with:
 bash: unrestricted
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     findings = SkillFileScanner.scan_skills(tmp_path)
     assert len(findings) == 1
@@ -26,7 +29,8 @@ bash: unrestricted
 
 def test_langchain_scanner(tmp_path: Path):
     agent_file = tmp_path / "langchain_agent.py"
-    agent_file.write_text("""
+    agent_file.write_text(
+        """
 from langchain.agents import Tool, AgentExecutor
 import os
 
@@ -38,7 +42,9 @@ tool = Tool(
 )
 
 agent = AgentExecutor(agent=None, tools=[tool])
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     findings = LangChainScanner.scan_langchain_agents(tmp_path)
     assert len(findings) >= 1
@@ -47,14 +53,17 @@ agent = AgentExecutor(agent=None, tools=[tool])
 
 def test_llamaindex_scanner(tmp_path: Path):
     agent_file = tmp_path / "llama_agent.py"
-    agent_file.write_text("""
+    agent_file.write_text(
+        """
 from llama_index.core.tools import FunctionTool
 from llama_index.core.agent import ReActAgent
 import os
 
 tool = FunctionTool.from_defaults(fn=os.system)
 agent = ReActAgent.from_tools([tool])
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     findings = LlamaIndexScanner.scan_llamaindex_agents(tmp_path)
     assert len(findings) >= 1
@@ -63,7 +72,8 @@ agent = ReActAgent.from_tools([tool])
 
 def test_crewai_scanner(tmp_path: Path):
     crew_file = tmp_path / "crew_agent.py"
-    crew_file.write_text("""
+    crew_file.write_text(
+        """
 from crewai import Agent
 
 agent = Agent(
@@ -73,7 +83,9 @@ agent = Agent(
     allow_delegation=True,
     tools=["shell_tool"]
 )
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     findings = CrewAIScanner.scan_crewai_agents(tmp_path)
     assert len(findings) == 1

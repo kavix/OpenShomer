@@ -57,9 +57,7 @@ class LlamaIndexScanner:
 
             # 3. VectorStoreIndex missing tenant filters or unbounded similarity_top_k
             is_llama = (
-                "llama_index" in content.lower()
-                or "llamaindex" in content.lower()
-                or "VectorStoreIndex" in content
+                "llama_index" in content.lower() or "llamaindex" in content.lower() or "VectorStoreIndex" in content
             )
             has_index = "VectorStoreIndex" in content or (
                 is_llama and (".as_retriever(" in content or ".as_query_engine(" in content)

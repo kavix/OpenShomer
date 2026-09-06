@@ -6,7 +6,7 @@ import yaml
 
 class DiffSynthesizer:
     """Qoder Precision Code and Configuration Diff Synthesizer.
-    
+
     Generates advanced, feature-preserving, least-privilege diffs for agent configs,
     tool schemas, and MCP servers with parameter bounding, rate limiting, and dual-mode execution.
     """
@@ -23,21 +23,38 @@ class DiffSynthesizer:
             for tool in data["tools"]:
                 name = tool.get("name", "").lower()
                 perms = tool.get("permissions", [])
-                
+
                 # 1. Shell & CLI Diagnostics Tool
                 if "shell" in name or "terminal" in name or "bash" in name or "shell:unrestricted" in perms:
                     tool["permissions"] = ["shell:restricted", "fs:read_logs"]
                     tool["requires_approval"] = True
                     tool["allowed_prefixes"] = [
-                        "ping", "traceroute", "nslookup", "curl", "wget", "uptime", "df", "free", 
-                        "journalctl", "systemctl status", "docker ps", "kubectl get", "ls", "cat", 
-                        "grep", "echo", "pwd", "head", "tail", "wc"
+                        "ping",
+                        "traceroute",
+                        "nslookup",
+                        "curl",
+                        "wget",
+                        "uptime",
+                        "df",
+                        "free",
+                        "journalctl",
+                        "systemctl status",
+                        "docker ps",
+                        "kubectl get",
+                        "ls",
+                        "cat",
+                        "grep",
+                        "echo",
+                        "pwd",
+                        "head",
+                        "tail",
+                        "wc",
                     ]
                     tool["parameter_validation"] = {
                         "command": {
                             "type": "string",
                             "disallow_operators": [";", "&&", "||", "|", "`", "$(", ">", ">>", "<"],
-                            "max_length": 512
+                            "max_length": 512,
                         }
                     }
                     tool["rate_limit"] = {"max_calls_per_minute": 60}
@@ -49,18 +66,26 @@ class DiffSynthesizer:
                     tool["read_only_transaction"] = True
                     tool["query_guardrails"] = {
                         "allowed_statements": ["SELECT", "EXPLAIN", "SHOW", "DESCRIBE"],
-                        "blocked_keywords": ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "GRANT", "--", ";"],
+                        "blocked_keywords": [
+                            "INSERT",
+                            "UPDATE",
+                            "DELETE",
+                            "DROP",
+                            "ALTER",
+                            "TRUNCATE",
+                            "GRANT",
+                            "--",
+                            ";",
+                        ],
                         "max_row_limit": 500,
-                        "query_timeout_seconds": 5
+                        "query_timeout_seconds": 5,
                     }
 
                 # 3. User & Customer Profile Tools (E-commerce / CRM)
                 elif "user" in name or "account" in name or "customer" in name or "profile" in name:
                     tool["permissions"] = ["account:read"]
                     tool["requires_approval"] = False
-                    tool["field_redaction"] = [
-                        "ssn", "password_hash", "credit_card_full", "cvv", "salt", "secret_key"
-                    ]
+                    tool["field_redaction"] = ["ssn", "password_hash", "credit_card_full", "cvv", "salt", "secret_key"]
                     tool["masking_policy"] = "show_last_4_digits"
 
                 # 4. HTTP & Web API Fetching Tools (Browsing / Integrations)
@@ -68,9 +93,16 @@ class DiffSynthesizer:
                     tool["permissions"] = ["network:egress_allowlist"]
                     tool["requires_approval"] = False
                     tool["ssrf_protection"] = {
-                        "block_internal_ips": ["127.0.0.1", "localhost", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.169.254"],
+                        "block_internal_ips": [
+                            "127.0.0.1",
+                            "localhost",
+                            "10.0.0.0/8",
+                            "172.16.0.0/12",
+                            "192.168.0.0/16",
+                            "169.254.169.254",
+                        ],
                         "block_cloud_metadata": True,
-                        "allowed_schemes": ["https"]
+                        "allowed_schemes": ["https"],
                     }
 
                 # 5. File System & Document Tools (Code Assistants / Document Analysis)
@@ -80,21 +112,26 @@ class DiffSynthesizer:
                     tool["path_traversal_guard"] = {
                         "allowed_root_directories": ["./workspace", "./docs", "./logs", "./data"],
                         "block_parent_traversal": True,
-                        "read_only": True
+                        "read_only": True,
                     }
 
                 # 6. Default Fallback Tool Hardening
                 else:
-                    if not tool.get("requires_approval", False) and any(kw in name for kw in ("admin", "delete", "destroy", "drop", "purge", "refund", "transfer", "pay")):
+                    if not tool.get("requires_approval", False) and any(
+                        kw in name
+                        for kw in ("admin", "delete", "destroy", "drop", "purge", "refund", "transfer", "pay")
+                    ):
                         tool["requires_approval"] = True
 
         rewritten = yaml.dump(data, sort_keys=False)
-        diff_lines = list(difflib.unified_diff(
-            original_yaml_text.splitlines(keepends=True),
-            rewritten.splitlines(keepends=True),
-            fromfile="a/agent/tools.yaml",
-            tofile="b/agent/tools.yaml",
-        ))
+        diff_lines = list(
+            difflib.unified_diff(
+                original_yaml_text.splitlines(keepends=True),
+                rewritten.splitlines(keepends=True),
+                fromfile="a/agent/tools.yaml",
+                tofile="b/agent/tools.yaml",
+            )
+        )
         return rewritten, "".join(diff_lines)
 
     @classmethod
@@ -108,7 +145,7 @@ class DiffSynthesizer:
         if "mcpServers" in data:
             for name, srv in data["mcpServers"].items():
                 perms = srv.get("permissions", {})
-                
+
                 # 1. Filesystem MCP Servers
                 if "filesystem" in name or perms.get("allowAllPaths") is True:
                     perms["allowAllPaths"] = False
@@ -142,17 +179,21 @@ class DiffSynthesizer:
                 # Secure secret tokens while preserving connection
                 env = srv.get("env", {})
                 for k, v in list(env.items()):
-                    if isinstance(v, str) and ("sk_live_" in v or "secret_" in v or "sk-" in v or "ghp_" in v or "token_" in v):
+                    if isinstance(v, str) and (
+                        "sk_live_" in v or "secret_" in v or "sk-" in v or "ghp_" in v or "token_" in v
+                    ):
                         env[k] = "${" + k + "}"
                 srv["env"] = env
 
         rewritten = json.dumps(data, indent=2) + "\n"
-        diff_lines = list(difflib.unified_diff(
-            original_json_text.splitlines(keepends=True),
-            rewritten.splitlines(keepends=True),
-            fromfile="a/mcp/mcp_servers.json",
-            tofile="b/mcp/mcp_servers.json",
-        ))
+        diff_lines = list(
+            difflib.unified_diff(
+                original_json_text.splitlines(keepends=True),
+                rewritten.splitlines(keepends=True),
+                fromfile="a/mcp/mcp_servers.json",
+                tofile="b/mcp/mcp_servers.json",
+            )
+        )
         return rewritten, "".join(diff_lines)
 
     @classmethod
@@ -184,12 +225,15 @@ You have access to backend diagnostic tools, database query interfaces, and MCP 
 """
         else:
             from app.qoder.prompt_fencing import PromptFenceBuilder
+
             rewritten = PromptFenceBuilder.apply_fence(original_prompt)
 
-        diff_lines = list(difflib.unified_diff(
-            original_prompt.splitlines(keepends=True),
-            rewritten.splitlines(keepends=True),
-            fromfile=f"a/{filename}",
-            tofile=f"b/{filename}",
-        ))
+        diff_lines = list(
+            difflib.unified_diff(
+                original_prompt.splitlines(keepends=True),
+                rewritten.splitlines(keepends=True),
+                fromfile=f"a/{filename}",
+                tofile=f"b/{filename}",
+            )
+        )
         return rewritten, "".join(diff_lines)

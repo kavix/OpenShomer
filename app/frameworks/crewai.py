@@ -27,7 +27,9 @@ class CrewAIScanner:
             if "allow_delegation" in content:
                 if re.search(r"allow_delegation\s*[:=]\s*True", content, re.IGNORECASE):
                     # Check if agent has dangerous tools attached
-                    if re.search(r"tools\s*[:=]\s*\[.*?(?:shell|bash|terminal|exec|sql).*?\]", content, re.IGNORECASE | re.DOTALL):
+                    if re.search(
+                        r"tools\s*[:=]\s*\[.*?(?:shell|bash|terminal|exec|sql).*?\]", content, re.IGNORECASE | re.DOTALL
+                    ):
                         findings.append(
                             Finding(
                                 id=f"CREW-{finding_idx:03d}",

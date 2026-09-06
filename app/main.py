@@ -7,7 +7,7 @@ from app.api.mulerun import router as mulerun_router
 app = FastAPI(
     title="OpenShomer API",
     description="Autonomous Agentic Security Engineer for LLM prompts, agent configs, tool definitions, and MCP servers.",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 app.add_middleware(
@@ -26,4 +26,3 @@ app.include_router(mulerun_router)
 def health_check():
     """Health check endpoint."""
     return {"status": "ok", "service": "OpenShomer", "version": "0.1.0"}
-

@@ -14,7 +14,7 @@ def test_remediation_generates_safe_diff():
         affected_files=["agent/tools.yaml", "mcp/mcp_servers.json"],
         recommended_fix="Restrict tool commands and add approval gate",
         confidence=0.95,
-        risk=Severity.HIGH
+        risk=Severity.HIGH,
     )
 
     result = engine.remediate(investigation, FindingType.OVER_PERMISSIONED_TOOL)

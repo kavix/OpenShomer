@@ -46,12 +46,7 @@ def test_alibaba_qwen_provider_generate_success():
     mock_response.status_code = 200
     mock_response.json.return_value = {
         "choices": [
-            {
-                "message": {
-                    "role": "assistant",
-                    "content": "Alibaba Cloud Qwen: Vulnerability diagnosed successfully."
-                }
-            }
+            {"message": {"role": "assistant", "content": "Alibaba Cloud Qwen: Vulnerability diagnosed successfully."}}
         ]
     }
 
@@ -109,12 +104,18 @@ def test_investigator_and_remediator_with_qwen_provider(tmp_path):
 
 def test_cli_fix_with_alibaba_provider_flag():
     runner = CliRunner()
-    result = runner.invoke(app, [
-        "fix",
-        "demo/vulnerable-agent",
-        "--provider", "alibaba",
-        "--model", "qwen-plus",
-        "--api-key", "mock_dashscope_key"
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "fix",
+            "demo/vulnerable-agent",
+            "--provider",
+            "alibaba",
+            "--model",
+            "qwen-plus",
+            "--api-key",
+            "mock_dashscope_key",
+        ],
+    )
     assert result.exit_code == 0
     assert "Active LLM Provider: AlibabaQwenProvider (qwen-plus)" in result.stdout

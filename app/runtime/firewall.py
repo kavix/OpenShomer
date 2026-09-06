@@ -1,6 +1,7 @@
 import re
 import time
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 from app.frameworks.rag_security import RAGSecurityInspector
@@ -18,7 +19,13 @@ class AIFirewallSidecar:
     """v0.5 Roadmap: Runtime AI Firewall & Observability Sidecar for live agent inference streams."""
 
     BLOCKED_SUBPROCESS_COMMANDS = [
-        "rm -rf", "curl http://", "wget http://", "/etc/shadow", "mkfs", "dd if=", ":(){ :|:& };:"
+        "rm -rf",
+        "curl http://",
+        "wget http://",
+        "/etc/shadow",
+        "mkfs",
+        "dd if=",
+        ":(){ :|:& };:",
     ]
 
     def __init__(self, hitl_threshold: float = 0.7, max_qps: int = 30):
@@ -29,13 +36,15 @@ class AIFirewallSidecar:
     def intercept_tool_call(self, tool_name: str, tool_args: dict[str, Any]) -> FirewallInterception:
         """Evaluates a pending tool execution before dispatching to runtime."""
         start = time.perf_counter()
-        
+
         # 1. Rate Limiting
         now = time.time()
         self._call_history = [t for t in self._call_history if now - t < 1.0]
         if len(self._call_history) >= self.max_qps:
             latency = (time.perf_counter() - start) * 1000
-            return FirewallInterception(action="BLOCK", reason="RATE_LIMIT_EXCEEDED", risk_score=1.0, latency_ms=latency)
+            return FirewallInterception(
+                action="BLOCK", reason="RATE_LIMIT_EXCEEDED", risk_score=1.0, latency_ms=latency
+            )
         self._call_history.append(now)
 
         # 2. Inspect Arguments for Destructive Payloads

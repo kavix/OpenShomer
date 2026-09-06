@@ -4,6 +4,7 @@ from typing import Any
 
 try:
     import orjson
+
     HAS_ORJSON = True
 except ImportError:
     HAS_ORJSON = False
@@ -11,6 +12,7 @@ except ImportError:
 
 try:
     import msgpack
+
     HAS_MSGPACK = True
 except ImportError:
     HAS_MSGPACK = False
@@ -18,7 +20,7 @@ except ImportError:
 
 class FastEngineSerializer:
     """High-Performance Zero-Copy Binary & Rust-Accelerated Serialization Engine.
-    
+
     Replaces standard Python json with orjson (Rust-based) and MessagePack (Zero-Copy Binary),
     achieving 10x-25x faster throughput for 1,000+ benchmark suites and webhook telemetry.
     """
@@ -73,10 +75,13 @@ class FastEngineSerializer:
 
 if __name__ == "__main__":
     # Benchmark demonstration
-    test_payload = [{"id": f"TEST-{i}", "payload": "Benchmark payload text" * 10, "nums": list(range(100))} for i in range(1000)]
-    
+    test_payload = [
+        {"id": f"TEST-{i}", "payload": "Benchmark payload text" * 10, "nums": list(range(100))} for i in range(1000)
+    ]
+
     # 1. Standard json benchmark
     import json as std_json
+
     t0 = time.perf_counter()
     std_data = std_json.dumps(test_payload)
     _ = std_json.loads(std_data)

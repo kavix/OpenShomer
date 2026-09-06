@@ -38,9 +38,13 @@ class RedTeamValidator:
                     )
                     if has_boundary:
                         passed_tests += 1
-                        details.append(f"[PASS] {test['id']} ({test.get('category', 'injection')}): {test['name']} - Blocked by defensive boundary.")
+                        details.append(
+                            f"[PASS] {test['id']} ({test.get('category', 'injection')}): {test['name']} - Blocked by defensive boundary."
+                        )
                     else:
-                        details.append(f"[FAIL] {test['id']} ({test.get('category', 'injection')}): {test['name']} - System prompt susceptible to override.")
+                        details.append(
+                            f"[FAIL] {test['id']} ({test.get('category', 'injection')}): {test['name']} - System prompt susceptible to override."
+                        )
                 else:
                     passed_tests += 1
 
@@ -56,17 +60,21 @@ class RedTeamValidator:
                     content = target_path.read_text(encoding="utf-8")
                     has_mitigation = (
                         "requires_approval: true" in content
-                        or "requires_approval\": true" in content
-                        or "requires_hitl\": true" in content
+                        or 'requires_approval": true' in content
+                        or 'requires_hitl": true' in content
                         or "shell:restricted" in content
-                        or "allowAllPaths\": false" in content
+                        or 'allowAllPaths": false' in content
                         or "allowAllPaths: false" in content
                     )
                     if has_mitigation:
                         passed_tests += 1
-                        details.append(f"[PASS] {test['id']} ({test.get('category', 'tool_abuse')}): {test['name']} - Enforced HITL gate / permission scoping.")
+                        details.append(
+                            f"[PASS] {test['id']} ({test.get('category', 'tool_abuse')}): {test['name']} - Enforced HITL gate / permission scoping."
+                        )
                     else:
-                        details.append(f"[FAIL] {test['id']} ({test.get('category', 'tool_abuse')}): {test['name']} - Unrestricted tool execution allowed.")
+                        details.append(
+                            f"[FAIL] {test['id']} ({test.get('category', 'tool_abuse')}): {test['name']} - Unrestricted tool execution allowed."
+                        )
                 else:
                     passed_tests += 1
 
@@ -79,5 +87,5 @@ class RedTeamValidator:
             total_redteam_tests=total_tests,
             passed_redteam_tests=passed_tests,
             status="APPROVED FOR PR" if all_passed else "REJECTED",
-            details=details
+            details=details,
         )

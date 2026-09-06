@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 from app.frameworks.crewai import CrewAIScanner
 from app.frameworks.langchain import LangChainScanner

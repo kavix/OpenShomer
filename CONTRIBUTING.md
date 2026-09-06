@@ -28,6 +28,7 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 3. **Install dependencies and run the suite:**
    ```bash
    make install
+   make lint
    make test
    make run
    ```
@@ -36,6 +37,8 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 
    ```bash
    uv sync
+   uv run ruff check .
+   uv run ruff format --check .
    uv run pytest -v
    uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
@@ -55,8 +58,11 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
 
 1. Create a feature branch (`git checkout -b feat/your-feature-name`).
 2. Ensure all tests pass (`make test` or `uv run pytest -v`).
-3. Commit with clear, descriptive messages following [Conventional Commits](https://www.conventionalcommits.org/).
-4. Push your branch and open a PR with the PR template checklist completed.
+3. Run the lint and formatting checks (`make lint`). Use `make format` to apply safe fixes.
+4. Run `uv run pre-commit install` once to check future commits, or run all hooks directly with
+   `uv run pre-commit run --all-files`.
+5. Commit with clear, descriptive messages following [Conventional Commits](https://www.conventionalcommits.org/).
+6. Push your branch and open a PR with the PR template checklist completed.
 
 ---
 
@@ -77,4 +83,3 @@ OpenShomer includes automated workflow bots to streamline issue assignment and p
 ## 📜 Code of Conduct
 
 Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all project interactions.
-

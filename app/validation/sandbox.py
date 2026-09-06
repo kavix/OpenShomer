@@ -39,8 +39,9 @@ class SandboxRunner:
     def _apply_diff_in_sandbox(self, sandbox_root: Path, diff: str):
         """Apply generated diff chunks and remediated contents to files in the sandbox environment."""
         from app.agents.remediation import RemediationEngine
+
         remediator = RemediationEngine(sandbox_root)
-        
+
         for root_item in sandbox_root.rglob("*"):
             if root_item.is_file():
                 rel_path = str(root_item.relative_to(sandbox_root))
@@ -48,9 +49,9 @@ class SandboxRunner:
                     try:
                         orig = root_item.read_text(encoding="utf-8")
                         from app.models.findings import FindingType
+
                         rewritten = remediator._rewrite_file_content(rel_path, orig, FindingType.OVER_PERMISSIONED_TOOL)
                         if rewritten and rewritten != orig:
                             root_item.write_text(rewritten, encoding="utf-8")
                     except Exception:
                         pass
-

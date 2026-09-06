@@ -21,7 +21,7 @@ def test_api_findings_crud_full():
         "file": "agent/tools.yaml",
         "tool": "run_shell",
         "issue": "Unchecked shell",
-        "repository": "test/repo"
+        "repository": "test/repo",
     }
     resp = client.post("/findings", json=f_payload)
     assert resp.status_code == 201
@@ -68,6 +68,7 @@ def test_cli_subcommands_full(tmp_path):
 
 def test_tools_search_and_read(tmp_path):
     from app.agents.tools import AgentRepoTools
+
     d = tmp_path / "sub"
     d.mkdir()
     (d / "hello.txt").write_text("world", encoding="utf-8")

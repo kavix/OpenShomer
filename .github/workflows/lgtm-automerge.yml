@@ -46,7 +46,7 @@ jobs:
             } else if (context.eventName === 'issue_comment') {
               prNumber = context.payload.issue.number;
               const comment = context.payload.comment.body.trim();
-              
+
               // Match /lgtm, #lgtm, lgtm, LGTM, lgtm!, LGTM! with word boundaries or punctuation
               const lgtmRegex = /(?:^|\s)(?:\/|#)?lgtm(?:!|\b)/i;
               isValidTrigger = lgtmRegex.test(comment);
@@ -111,7 +111,7 @@ jobs:
 
             } catch (error) {
               core.setFailed(`Failed to auto-merge PR #${prNumber}: ${error.message}`);
-              
+
               await github.rest.issues.createComment({
                 owner,
                 repo,

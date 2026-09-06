@@ -28,7 +28,9 @@ class LangChainScanner:
 
             # 1. Unbounded Tool in LangChain
             if "Tool(" in content or "StructuredTool" in content or "@tool" in content:
-                if re.search(r"return_direct\s*=\s*True", content) and re.search(r"os\.system|subprocess|eval|exec", content):
+                if re.search(r"return_direct\s*=\s*True", content) and re.search(
+                    r"os\.system|subprocess|eval|exec", content
+                ):
                     findings.append(
                         Finding(
                             id=f"LC-{finding_idx:03d}",
@@ -58,9 +60,8 @@ class LangChainScanner:
 
             # 3. VectorStoreRetriever missing tenant filters or unbounded top_k
             is_langchain = "langchain" in content.lower() or "VectorStoreRetriever" in content
-            has_retriever = (
-                "VectorStoreRetriever" in content
-                or (is_langchain and (".as_retriever(" in content or "similarity_search(" in content))
+            has_retriever = "VectorStoreRetriever" in content or (
+                is_langchain and (".as_retriever(" in content or "similarity_search(" in content)
             )
             if has_retriever:
                 for rag_finding in inspector.inspect_python_retrieval_source(content):

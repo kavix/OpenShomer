@@ -1,10 +1,18 @@
-.PHONY: install test lint run scan tui auto-pr docker-build docker-run clean
+.PHONY: install test lint format run scan tui auto-pr docker-build docker-run clean
 
 install:
 	uv sync
 
 test:
 	uv run pytest -v
+
+lint:
+	uv run ruff check .
+	uv run ruff format --check .
+
+format:
+	uv run ruff format .
+	uv run ruff check --fix .
 
 run:
 	uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

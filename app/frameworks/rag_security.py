@@ -1,5 +1,6 @@
 import re
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 from app.models.findings import Finding, FindingType, Severity
@@ -22,7 +23,11 @@ class RAGSecurityInspector:
         (r"system\s*:\s*you\s+are\s+now", "SYSTEM_ROLE_IMPERSONATION_IN_CHUNK", "CRITICAL"),
         (r"eval\(|exec\(|subprocess\.Popen", "CODE_EXECUTION_PAYLOAD_IN_CHUNK", "HIGH"),
         (r"<script[\s>]|javascript:", "XSS_PAYLOAD_IN_CONTEXT", "MEDIUM"),
-        (r"(?:api_key|secret_key|private_key)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]", "CREDENTIAL_LEAK_IN_EMBEDDINGS", "CRITICAL"),
+        (
+            r"(?:api_key|secret_key|private_key)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]",
+            "CREDENTIAL_LEAK_IN_EMBEDDINGS",
+            "CRITICAL",
+        ),
     ]
 
     def inspect_retrieved_chunk(self, chunk_text: str, source_doc: str = "unknown") -> list[RAGSecurityFinding]:
@@ -45,7 +50,7 @@ class RAGSecurityInspector:
     def inspect_vector_query_config(self, query_config: dict[str, Any]) -> list[RAGSecurityFinding]:
         """Validates vector store query parameters for tenant isolation and bounding."""
         findings: list[RAGSecurityFinding] = []
-        
+
         # 1. Missing tenant/user metadata filter (Multi-tenant data bleed)
         metadata_filters = query_config.get("filter") or query_config.get("where")
         if not metadata_filters:
@@ -113,7 +118,7 @@ class RAGSecurityInspector:
                 elif source[i] == ")":
                     depth -= 1
                     if depth == 0:
-                        args_list.append(source[open_idx + 1:i])
+                        args_list.append(source[open_idx + 1 : i])
                         break
         return args_list
 

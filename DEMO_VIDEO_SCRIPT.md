@@ -14,8 +14,8 @@ This guide gives you:
   - Show `prompts/system.md` (highlighting the permissive prompt vulnerable to jailbreaks/prompt injection).
   - Show `agent/tools.yaml` (highlighting unrestricted shell/exec privileges without human approval gates).
 - **Voiceover / Narration:**
-  > *"Hi everyone, we are team KODEGAS, presenting **OpenShomer** for the AI Buildathon.  
-  > Today, developers are rapidly building autonomous AI agents with tools, LangChain, CrewAI, and Model Context Protocol servers. But these agents introduce critical security blind spots: over-privileged shell access, hardcoded secrets, and susceptibility to prompt injections.  
+  > *"Hi everyone, we are team KODEGAS, presenting **OpenShomer** for the AI Buildathon.
+  > Today, developers are rapidly building autonomous AI agents with tools, LangChain, CrewAI, and Model Context Protocol servers. But these agents introduce critical security blind spots: over-privileged shell access, hardcoded secrets, and susceptibility to prompt injections.
   > Traditional security tools only dump noisy alerts. They don't fix the code, and they don't prove if a fix breaks agent functionality. OpenShomer changes this by closing the loop: Find, Investigate, Rewrite, Red-team in sandbox, and open an evidence-backed Pull Request."*
 
 ---
@@ -33,8 +33,8 @@ This guide gives you:
     ```
   - Show the TUI or terminal output: the autonomous investigation agent parsing the AST, identifying `OVER_PERMISSIONED_TOOL` and `PROMPT_INJECTION_SURFACE`, and synthesizing safe patches using Alibaba Cloud Qwen-2.5-Coder.
 - **Voiceover / Narration:**
-  > *"Here, we launch OpenShomer against our vulnerable agent.  
-  > Powered by Alibaba Cloud Model Studio and the Qwen model family, OpenShomer's investigation agent inspects the full agent configuration and code syntax tree.  
+  > *"Here, we launch OpenShomer against our vulnerable agent.
+  > Powered by Alibaba Cloud Model Studio and the Qwen model family, OpenShomer's investigation agent inspects the full agent configuration and code syntax tree.
   > It pinpoints the exact root causes, assesses the blast radius, and synthesizes a minimal safe rewrite—hardening the system prompt boundaries and replacing unrestricted shell execution with scoped commands and approval gates, all while preserving developer intent."*
 
 ---
@@ -47,8 +47,8 @@ This guide gives you:
     2. Permission surface reduction diff generated.
     3. Live red-team benchmark running adversarial prompt injection attacks against the newly patched prompt (all blocked / passed).
 - **Voiceover / Narration:**
-  > *"Detection and rewrites are not enough without proof. OpenShomer boots an isolated Docker sandbox to validate the patch.  
-  > It verifies deterministic permission reductions and runs an automated adversarial red-team suite—blasting the patched agent with prompt injections and tool abuse payloads.  
+  > *"Detection and rewrites are not enough without proof. OpenShomer boots an isolated Docker sandbox to validate the patch.
+  > It verifies deterministic permission reductions and runs an automated adversarial red-team suite—blasting the patched agent with prompt injections and tool abuse payloads.
   > Only when every single security test passes does OpenShomer certify the patch."*
 
 ---
@@ -59,8 +59,8 @@ This guide gives you:
   - Open the newly generated Pull Request.
   - Scroll through the PR description: show the git diff, the before-and-after risk score, and the attached sandbox execution evidence log.
 - **Voiceover / Narration:**
-  > *"Once validated, OpenShomer automatically cuts a Git branch and opens a GitHub Pull Request.  
-  > As you can see, the PR doesn't just show the diff—it includes cryptographic proof, sandbox logs, and adversarial test results, allowing security teams to merge with complete confidence.  
+  > *"Once validated, OpenShomer automatically cuts a Git branch and opens a GitHub Pull Request.
+  > As you can see, the PR doesn't just show the diff—it includes cryptographic proof, sandbox logs, and adversarial test results, allowing security teams to merge with complete confidence.
   > Built with Python, FastAPI, and Alibaba Cloud Qwen AI, OpenShomer transforms AI security from manual alert triage into autonomous, verified remediation. Thank you!"*
 
 ---

@@ -43,7 +43,9 @@ class InvestigationAgent:
             details["prompt_length"] = prompt_data.get("length_chars", 0)
 
         elif finding.type == FindingType.DATA_EXFILTRATION_PATH:
-            root_cause = f"Unrestricted network or secondary tasks in '{finding.file}' allow potential data exfiltration."
+            root_cause = (
+                f"Unrestricted network or secondary tasks in '{finding.file}' allow potential data exfiltration."
+            )
             recommended_fix = "Restrict outbound network access and sanitize agent responses."
 
         elif finding.type == FindingType.HARDCODED_SECRET_IN_PROMPT:
@@ -55,9 +57,7 @@ class InvestigationAgent:
                 f"Vector retrieval in '{finding.file}' lacks tenant metadata filters "
                 "or uses unbounded top_k, enabling cross-tenant leakage or context flooding."
             )
-            recommended_fix = (
-                "Attach mandatory tenant_id/user_id metadata filters and cap top_k <= 20."
-            )
+            recommended_fix = "Attach mandatory tenant_id/user_id metadata filters and cap top_k <= 20."
 
         else:
             root_cause = f"Configuration vulnerability detected in {finding.file}."
@@ -77,5 +77,5 @@ class InvestigationAgent:
             recommended_fix=recommended_fix,
             confidence=confidence,
             risk=risk,
-            details=details
+            details=details,
         )
