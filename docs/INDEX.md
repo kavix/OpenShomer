@@ -22,10 +22,10 @@ graph TD
     G1 --> U4["• How It Works (docs/HOW_IT_WORKS.md)"]
 
     G2 --> A1["• Deep Architecture (docs/ARCHITECTURE.md)"]
-    G2 --> A2["• Use Cases & Scenarios (docs/USE_CASES.md)"]
+    G2 --> A2["• Use Cases & RAG Isolation (docs/USE_CASES.md)"]
 
     G3 --> S1["• Threat Model & Red-Team (docs/wiki/Threat-Model.md)"]
-    G3 --> S2["• Operational Rules & Policy (docs/RULES.md)"]
+    G3 --> S2["• Rules, including LLM08 (docs/RULES.md)"]
 
     G4 --> Q1["• Alibaba Cloud & Qwen Suite (docs/ALIBABA_QWEN_GUIDE.md)"]
 
@@ -51,7 +51,7 @@ graph TD
 | Document | Purpose | Target Audience |
 |---|---|---|
 | 🏗️ **[Deep Architecture](ARCHITECTURE.md)** | Complete breakdown of **MuleRun** (Workflow Runtime), **Qoder** (AST Synthesizer), and **QoderWork** (Desktop Agent). | Software Architects |
-| 📋 **[Use Cases & Flow Scenarios](USE_CASES.md)** | Detailed real-world scenarios across SRE/DevOps, SQL Analytics, Customer Support, and MCP integrations. | AppSec Engineers |
+| 📋 **[Use Cases & Flow Scenarios](USE_CASES.md)** | Detailed real-world scenarios, including [multi-tenant vector-store isolation and context-poisoning defense](USE_CASES.md#use-case-4-multi-tenant-vector-store-isolation-and-context-poisoning-defense-uc-4). | AppSec Engineers |
 
 ---
 
@@ -68,5 +68,6 @@ graph TD
 | Document | Purpose | Target Audience |
 |---|---|---|
 | 🛡️ **[Threat Model & Attack Surface](wiki/Threat-Model.md)** | Analysis of OWASP LLM Top 10, MITRE ATLAS tactics, and prompt injection threat surfaces. | Security Teams |
+| 📏 **[Static LLM Security Rules](RULES.md)** | Detection and remediation contracts, including [LLM08 vector and embedding weaknesses](RULES.md#llm08--vector-and-embedding-weaknesses). | AppSec Engineers, Contributors |
 | 🛠️ **[Developer Setup](wiki/Developer-Setup.md)** | Virtual environments, pytest test execution, `uv` workflows, and Ruff linting standards. | Contributors |
 | 🗺️ **[Wiki Roadmap](wiki/Roadmap.md)** | Multi-turn jailbreak simulations, containerized sandboxes, and enterprise roadmaps. | All Stakeholders |
