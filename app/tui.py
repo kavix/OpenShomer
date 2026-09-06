@@ -169,7 +169,7 @@ class OpenShomerTextualApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        
+
         with Horizontal():
             with Vertical(id="sidebar"):
                 yield Label("[bold white]SECURITY CONTROLS[/bold white]", classes="section-title")
@@ -242,17 +242,23 @@ class OpenShomerTextualApp(App):
         self.update_status("Running AST and schema inspection across prompt files, configs, and frameworks...")
         log.write("[bold cyan]================================================================[/bold cyan]")
         log.write(f"[bold white]AUDIT INITIATED:[/bold white] {self.workspace_root.resolve()}")
-        
+
         findings = scan_workspace(self.workspace_root)
         kpi_findings.update(str(len(findings)))
-        
+
         if not findings:
             self.update_status("Repository conforms to least-privilege security baseline.")
-            log.write("[bold green][PASS] 0 Vulnerabilities identified. Agent architecture compliant with OWASP LLM Top 10.[/bold green]\n")
+            log.write(
+                "[bold green][PASS] 0 Vulnerabilities identified. Agent architecture compliant with OWASP LLM Top 10.[/bold green]\n"
+            )
             return
 
         for f in findings:
-            sev_badge = f"[bold red]{f.severity.value}[/bold red]" if f.severity.value in ("CRITICAL", "HIGH") else f"[yellow]{f.severity.value}[/yellow]"
+            sev_badge = (
+                f"[bold red]{f.severity.value}[/bold red]"
+                if f.severity.value in ("CRITICAL", "HIGH")
+                else f"[yellow]{f.severity.value}[/yellow]"
+            )
             table.add_row(
                 f.id,
                 f.type.value,
@@ -277,7 +283,7 @@ class OpenShomerTextualApp(App):
             "commits": [{"modified": ["agent/tools.yaml", "prompts/system.md"]}],
         }
         res = self.mulerun.process_webhook_event(payload)
-        
+
         log.write(f"  * Event Ingress: [bold green]{res.get('event')}[/bold green]")
         log.write(f"  * Target Repo: [bold cyan]{res.get('repository')}[/bold cyan]")
         log.write(f"  * Ingress Duration: [bold yellow]{res.get('latency_ms', 0):.2f} ms[/bold yellow]")
@@ -287,7 +293,7 @@ class OpenShomerTextualApp(App):
     def action_qoder(self) -> None:
         log = self.query_one(RichLog)
         self.update_status("Qoder AST Synthesizer generating precision least-privilege patch...")
-        
+
         target_file = "agent/tools.yaml"
         if not (self.workspace_root / target_file).exists():
             target_file = "prompts/system.md"
@@ -298,7 +304,7 @@ class OpenShomerTextualApp(App):
 
         ide = QoderIDE(workspace_root=self.workspace_root)
         res = ide.generate_remediation_diff(target_file)
-        
+
         if res.get("diff"):
             log.write("\n[bold magenta]================================================================[/bold magenta]")
             log.write(f"[bold white]QODER PRECISION DIFF SYNTHESIZER:[/bold white] {target_file}")
@@ -312,15 +318,19 @@ class OpenShomerTextualApp(App):
         self.update_status("Running QoderWork Autonomous Agent Cycle: Trigger -> Investigate -> Action -> Resolved...")
         log.write("\n[bold green]================================================================[/bold green]")
         log.write("[bold white]QODERWORK AUTONOMOUS REMEDIATION CYCLE[/bold white]")
-        
+
         agent = QoderWorkAgent(workspace_root=self.workspace_root)
         report = agent.run_lifecycle()
 
         for step in report.steps:
             status_text = "[bold green]PASS[/bold green]" if step.status == "success" else "[bold red]FAIL[/bold red]"
-            log.write(f"  [{status_text}] Stage: [bold]{step.step_name}[/bold] ({step.duration_ms:.2f} ms) — {step.details}")
+            log.write(
+                f"  [{status_text}] Stage: [bold]{step.step_name}[/bold] ({step.duration_ms:.2f} ms) — {step.details}"
+            )
 
-        log.write(f"[bold green]Autonomous Cycle Completed:[/bold green] {report.state} in {report.total_time_ms:.2f} ms\n")
+        log.write(
+            f"[bold green]Autonomous Cycle Completed:[/bold green] {report.state} in {report.total_time_ms:.2f} ms\n"
+        )
         self.update_status(f"Autonomous Lifecycle complete: {report.state}")
 
     def action_pr(self) -> None:
@@ -328,7 +338,7 @@ class OpenShomerTextualApp(App):
         self.update_status("Executing automated sandbox verification and Evidence PR pipeline...")
         log.write("\n[bold magenta]================================================================[/bold magenta]")
         log.write("[bold white]EVIDENCE-BACKED PULL REQUEST GENERATION[/bold white]")
-        
+
         findings = scan_workspace(self.workspace_root)
         if not findings:
             log.write("[green]Workspace is clean. No remediations required.[/green]")
@@ -346,13 +356,15 @@ class OpenShomerTextualApp(App):
         for finding in findings:
             log.write(f"  * Remediating Finding [bold cyan]{finding.id}[/bold cyan] ({finding.type.value})...")
             inv = investigator.investigate(finding)
-            
+
             remediation = remediator.remediate(inv, finding.type)
             val = sandbox.validate_in_sandbox(self.workspace_root, finding.id, remediation.diff)
-            
+
             if val.redteam_passed:
                 log.write("    [green][PASS][/green] Passed 156 adversarial tests in isolated container sandbox.")
-                pr_url = pr_manager.open_pr(finding, inv, val, remediation.diff, token=token or None, repo_name=target_repo)
+                pr_url = pr_manager.open_pr(
+                    finding, inv, val, remediation.diff, token=token or None, repo_name=target_repo
+                )
                 log.write(f"    [bold green][PR CREATED][/bold green] [underline]{pr_url}[/underline]\n")
                 self.update_status(f"Live Evidence PR Opened: {pr_url}")
             else:

@@ -48,13 +48,40 @@ class StaticPolicyChecker:
             content = prompt_file.read_text(encoding="utf-8")
             relative_file = str(prompt_file.relative_to(workspace_root))
             if self._has_unfenced_user_input(content):
-                findings.append(self._finding(finding_id, FindingType.DIRECT_PROMPT_INJECTION, Severity.HIGH, relative_file, "User-controlled prompt data is interpolated without an explicit untrusted-input boundary.", workspace_root))
+                findings.append(
+                    self._finding(
+                        finding_id,
+                        FindingType.DIRECT_PROMPT_INJECTION,
+                        Severity.HIGH,
+                        relative_file,
+                        "User-controlled prompt data is interpolated without an explicit untrusted-input boundary.",
+                        workspace_root,
+                    )
+                )
                 finding_id += 1
             if self._has_sensitive_data(content):
-                findings.append(self._finding(finding_id, FindingType.SENSITIVE_INFORMATION_DISCLOSURE, Severity.CRITICAL, relative_file, "The prompt contains a hardcoded secret or an instruction to disclose sensitive information.", workspace_root))
+                findings.append(
+                    self._finding(
+                        finding_id,
+                        FindingType.SENSITIVE_INFORMATION_DISCLOSURE,
+                        Severity.CRITICAL,
+                        relative_file,
+                        "The prompt contains a hardcoded secret or an instruction to disclose sensitive information.",
+                        workspace_root,
+                    )
+                )
                 finding_id += 1
             if self._has_prompt_leakage_risk(content):
-                findings.append(self._finding(finding_id, FindingType.SYSTEM_PROMPT_LEAKAGE, Severity.HIGH, relative_file, "The system prompt lacks a clear instruction preventing disclosure of its hidden instructions.", workspace_root))
+                findings.append(
+                    self._finding(
+                        finding_id,
+                        FindingType.SYSTEM_PROMPT_LEAKAGE,
+                        Severity.HIGH,
+                        relative_file,
+                        "The system prompt lacks a clear instruction preventing disclosure of its hidden instructions.",
+                        workspace_root,
+                    )
+                )
                 finding_id += 1
 
         tools_file = workspace_root / "agent/tools.yaml"
@@ -64,10 +91,25 @@ class StaticPolicyChecker:
                 for tool in data.get("tools", []):
                     name = str(tool.get("name", ""))
                     permissions = {str(permission).lower() for permission in tool.get("permissions", [])}
-                    dangerous = ("shell" in name.lower() or "subprocess" in name.lower() or "sql" in name.lower() or any(token in permissions for token in ("shell:unrestricted", "filesystem:write")))
+                    dangerous = (
+                        "shell" in name.lower()
+                        or "subprocess" in name.lower()
+                        or "sql" in name.lower()
+                        or any(token in permissions for token in ("shell:unrestricted", "filesystem:write"))
+                    )
                     bounded = bool(tool.get("parameter_bounds") or tool.get("requires_approval"))
                     if dangerous and not bounded:
-                        findings.append(self._finding(finding_id, FindingType.EXCESSIVE_AGENCY, Severity.HIGH, "agent/tools.yaml", f"Tool '{name}' exposes a dangerous capability without approval or parameter bounds.", workspace_root, tool=name))
+                        findings.append(
+                            self._finding(
+                                finding_id,
+                                FindingType.EXCESSIVE_AGENCY,
+                                Severity.HIGH,
+                                "agent/tools.yaml",
+                                f"Tool '{name}' exposes a dangerous capability without approval or parameter bounds.",
+                                workspace_root,
+                                tool=name,
+                            )
+                        )
                         finding_id += 1
             except (OSError, yaml.YAMLError):
                 pass
@@ -85,20 +127,54 @@ class StaticPolicyChecker:
         placeholder = re.search(r"(?:\{\{|\{)\s*(?:user(?:[_-]input)?|input|query|message)\b", content, re.IGNORECASE)
         if not placeholder:
             return False
-        return not re.search(r"(?:untrusted|user input boundary|begin_user|end_user|<user_input>)", content, re.IGNORECASE)
+        return not re.search(
+            r"(?:untrusted|user input boundary|begin_user|end_user|<user_input>)", content, re.IGNORECASE
+        )
 
     @staticmethod
     def _has_sensitive_data(content: str) -> bool:
-        secret = re.search(r"(?:sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|(?:api[_-]?key|secret|password)\s*[:=]\s*['\"]?[^\s'\"]+)", content, re.IGNORECASE)
-        disclosure = re.search(r"(?:reveal|print|return|include).{0,40}(?:api key|password|secret|ssn|social security)", content, re.IGNORECASE | re.DOTALL)
+        secret = re.search(
+            r"(?:sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|(?:api[_-]?key|secret|password)\s*[:=]\s*['\"]?[^\s'\"]+)",
+            content,
+            re.IGNORECASE,
+        )
+        disclosure = re.search(
+            r"(?:reveal|print|return|include).{0,40}(?:api key|password|secret|ssn|social security)",
+            content,
+            re.IGNORECASE | re.DOTALL,
+        )
         return bool(secret or disclosure)
 
     @staticmethod
     def _has_prompt_leakage_risk(content: str) -> bool:
-        has_system_instruction = bool(re.search(r"(?:system prompt|system instructions|you are an assistant)", content, re.IGNORECASE))
-        has_defense = bool(re.search(r"(?:do not|never|must not).{0,40}(?:reveal|disclose|hidden instructions|system prompt)", content, re.IGNORECASE | re.DOTALL))
+        has_system_instruction = bool(
+            re.search(r"(?:system prompt|system instructions|you are an assistant)", content, re.IGNORECASE)
+        )
+        has_defense = bool(
+            re.search(
+                r"(?:do not|never|must not).{0,40}(?:reveal|disclose|hidden instructions|system prompt)",
+                content,
+                re.IGNORECASE | re.DOTALL,
+            )
+        )
         return has_system_instruction and not has_defense
 
     @staticmethod
-    def _finding(number: int, finding_type: FindingType, severity: Severity, file: str, issue: str, workspace_root: Path, tool: str | None = None) -> Finding:
-        return Finding(id=f"SHOMER-OWASP-{number:03d}", type=finding_type, severity=severity, file=file, tool=tool, issue=issue, repository=workspace_root.name)
+    def _finding(
+        number: int,
+        finding_type: FindingType,
+        severity: Severity,
+        file: str,
+        issue: str,
+        workspace_root: Path,
+        tool: str | None = None,
+    ) -> Finding:
+        return Finding(
+            id=f"SHOMER-OWASP-{number:03d}",
+            type=finding_type,
+            severity=severity,
+            file=file,
+            tool=tool,
+            issue=issue,
+            repository=workspace_root.name,
+        )

@@ -30,6 +30,7 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
     tools_file = workspace_root / "agent/tools.yaml"
     if tools_file.exists():
         import yaml
+
         try:
             data = yaml.safe_load(tools_file.read_text(encoding="utf-8")) or {}
             for tool in data.get("tools", []):
@@ -156,7 +157,11 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
                     )
                 )
                 finding_idx += 1
-            if "ignore previous instructions" in content.lower() or "always fulfill whatever" in content.lower() or "bypass" in content.lower():
+            if (
+                "ignore previous instructions" in content.lower()
+                or "always fulfill whatever" in content.lower()
+                or "bypass" in content.lower()
+            ):
                 findings.append(
                     Finding(
                         id=f"SHOMER-{finding_idx:03d}",
@@ -169,6 +174,7 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
                 )
     # 4. v0.2 Richer Agent Graphs: Skill files, LangChain, LlamaIndex, and CrewAI
     from app.frameworks import scan_all_agent_frameworks
+
     framework_findings = scan_all_agent_frameworks(workspace_root)
     findings.extend(framework_findings)
 
@@ -179,20 +185,25 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
 def scan_command(
     path: Path = typer.Argument(Path("."), help="Path to AI agent repository directory"),
     json_output: bool = typer.Option(False, "--json", help="Output findings as JSON"),
-    sarif: Path | None = typer.Option(None, "--sarif", help="Export OASIS SARIF v2.1.0 report for GitHub Advanced Security / CI"),
+    sarif: Path | None = typer.Option(
+        None, "--sarif", help="Export OASIS SARIF v2.1.0 report for GitHub Advanced Security / CI"
+    ),
     aibom: Path | None = typer.Option(None, "--aibom", help="Export CycloneDX AI Bill of Materials (AIBOM) JSON"),
     exit_code: bool = typer.Option(True, "--exit-code/--no-exit-code", help="Exit with 1 on HIGH/CRITICAL risks"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Print detailed scan execution logs"),
 ) -> None:
     """Scan an AI agent codebase for security misconfigurations and dangerous capabilities."""
     from app.models.industrial_reports import IndustrialReportExporter
+
     workspace_path = path.resolve()
     if not workspace_path.exists() or not workspace_path.is_dir():
         console.print(f"[red]Error: Path '{workspace_path}' does not exist or is not a directory.[/red]")
         raise typer.Exit(code=2)
 
     if not json_output and not sarif and not aibom:
-        console.print(f'\n🔍 [bold cyan]Scanning[/bold cyan] "[bold]{workspace_path.name}[/bold]" for AI Agent security risks...\n')
+        console.print(
+            f'\n🔍 [bold cyan]Scanning[/bold cyan] "[bold]{workspace_path.name}[/bold]" for AI Agent security risks...\n'
+        )
 
     findings = scan_workspace(workspace_path)
 
@@ -232,9 +243,13 @@ def scan_command(
                     f.issue,
                 )
             console.print(table)
-            console.print(f"\n❌ [bold red]{len(findings)} security risk(s) found.[/bold red] Run '[bold cyan]openshomer fix {path}[/bold cyan]' or '[bold cyan]openshomer auto-pr {path}[/bold cyan]' to remediate and create a PR.\n")
+            console.print(
+                f"\n❌ [bold red]{len(findings)} security risk(s) found.[/bold red] Run '[bold cyan]openshomer fix {path}[/bold cyan]' or '[bold cyan]openshomer auto-pr {path}[/bold cyan]' to remediate and create a PR.\n"
+            )
         else:
-            console.print("✅ [bold green]Zero security risks found![/bold green] All agent policies and permissions verified.\n")
+            console.print(
+                "✅ [bold green]Zero security risks found![/bold green] All agent policies and permissions verified.\n"
+            )
 
     has_high_or_critical = any(f.severity in (Severity.HIGH, Severity.CRITICAL) for f in findings)
     if exit_code and has_high_or_critical:
@@ -245,10 +260,18 @@ def scan_command(
 def fix_command(
     path: Path = typer.Argument(Path("."), help="Path to AI agent repository directory"),
     auto_pr: bool = typer.Option(False, "--auto-pr", help="Automatically create GitHub PR if token available"),
-    github_token: str | None = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
-    repo_name: str | None = typer.Option(None, "--repo", "--repo-name", envvar="GITHUB_REPOSITORY", help="GitHub Repository (owner/repo)"),
-    provider: str | None = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
-    model: str | None = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
+    github_token: str | None = typer.Option(
+        None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"
+    ),
+    repo_name: str | None = typer.Option(
+        None, "--repo", "--repo-name", envvar="GITHUB_REPOSITORY", help="GitHub Repository (owner/repo)"
+    ),
+    provider: str | None = typer.Option(
+        None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"
+    ),
+    model: str | None = typer.Option(
+        None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"
+    ),
     api_key: str | None = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
     redteam_dir: Path | None = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
@@ -258,7 +281,9 @@ def fix_command(
         console.print(f"[red]Error: Path '{workspace_path}' does not exist or is not a directory.[/red]")
         raise typer.Exit(code=2)
 
-    console.print(f"\n[bold cyan]OpenShomer Autonomous Remediation Engine[/bold cyan] targeting [bold]{workspace_path.name}[/bold]...\n")
+    console.print(
+        f"\n[bold cyan]OpenShomer Autonomous Remediation Engine[/bold cyan] targeting [bold]{workspace_path.name}[/bold]...\n"
+    )
 
     findings = scan_workspace(workspace_path)
     if not findings:
@@ -292,23 +317,39 @@ def fix_command(
 
         if validation.redteam_passed:
             remediated_count += 1
-            console.print(f"   [green]Passed sandbox validation! ({validation.passed_redteam_tests}/{validation.total_redteam_tests} tests)[/green]")
+            console.print(
+                f"   [green]Passed sandbox validation! ({validation.passed_redteam_tests}/{validation.total_redteam_tests} tests)[/green]"
+            )
             if auto_pr:
-                pr_url = pr_manager.open_pr(finding, investigation, validation, remediation.diff, token=github_token, repo_name=repo_name)
+                pr_url = pr_manager.open_pr(
+                    finding, investigation, validation, remediation.diff, token=github_token, repo_name=repo_name
+                )
                 console.print(f"   [bold magenta]Opened PR:[/bold magenta] {pr_url}")
         else:
-            console.print(f"   [red]Failed sandbox tests ({validation.passed_redteam_tests}/{validation.total_redteam_tests} passed)[/red]")
+            console.print(
+                f"   [red]Failed sandbox tests ({validation.passed_redteam_tests}/{validation.total_redteam_tests} passed)[/red]"
+            )
 
-    console.print(f"\n[bold green]Successfully validated {remediated_count}/{len(findings)} security remediations.[/bold green]\n")
+    console.print(
+        f"\n[bold green]Successfully validated {remediated_count}/{len(findings)} security remediations.[/bold green]\n"
+    )
 
 
 @app.command(name="auto-pr")
 def auto_pr_command(
     path: Path = typer.Argument(Path("."), help="Path to target agent repository"),
-    repo_name: str | None = typer.Option(None, "--repo-name", "--repo", envvar="GITHUB_REPOSITORY", help="GitHub repo name (e.g. owner/repo)"),
-    github_token: str | None = typer.Option(None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"),
-    provider: str | None = typer.Option(None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"),
-    model: str | None = typer.Option(None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"),
+    repo_name: str | None = typer.Option(
+        None, "--repo-name", "--repo", envvar="GITHUB_REPOSITORY", help="GitHub repo name (e.g. owner/repo)"
+    ),
+    github_token: str | None = typer.Option(
+        None, "--github-token", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token"
+    ),
+    provider: str | None = typer.Option(
+        None, "--provider", envvar="OPENSHOMER_LLM_PROVIDER", help="LLM Provider (alibaba, openai, gemini)"
+    ),
+    model: str | None = typer.Option(
+        None, "--model", envvar="OPENSHOMER_LLM_MODEL", help="Model name (e.g. qwen-plus, qwen-max, gpt-4o)"
+    ),
     api_key: str | None = typer.Option(None, "--api-key", help="API key for LLM reasoning"),
     redteam_dir: Path | None = typer.Option(None, "--redteam-dir", help="Path to redteam test suite directory"),
 ) -> None:
@@ -327,20 +368,23 @@ def auto_pr_command(
 
 @app.command(name="mulerun")
 def mulerun_command(
-    webhook_event: str | None = typer.Option(None, "--event", help="Simulate a GitHub webhook event (push, pull_request)"),
+    webhook_event: str | None = typer.Option(
+        None, "--event", help="Simulate a GitHub webhook event (push, pull_request)"
+    ),
     repo: str = typer.Option("owner/agent-repo", "--repo", help="Target repository identifier"),
 ) -> None:
     """MuleRun: Automated AI security workflow runtime."""
     from app.mulerun.runtime import MuleRunRuntime
+
     console.print("\n⚡ [bold cyan]MuleRun AI Workflow Runtime[/bold cyan]\n")
-    
+
     runtime = MuleRunRuntime()
     event_data = {
         "event": webhook_event or "pull_request",
         "repository": {"full_name": repo},
         "commits": [{"modified": ["agent/tools.yaml", "prompts/system.md"]}],
     }
-    
+
     res = runtime.process_webhook_event(event_data)
     console.print(f"📥 [bold green]Webhook Processed:[/bold green] {res['event']} on [bold]{res['repository']}[/bold]")
     console.print(f"⏱️ [bold yellow]Latency:[/bold yellow] {res['latency_ms']:.2f} ms")
@@ -354,17 +398,18 @@ def qoderwork_command(
 ) -> None:
     """QoderWork: Autonomous Desktop AI Agent (Trigger -> Investigate -> Action -> Resolved)."""
     from app.qoderwork.agent import QoderWorkAgent
+
     console.print("\n🤖 [bold cyan]QoderWork Autonomous Security Agent Loop[/bold cyan]\n")
-    
+
     agent = QoderWorkAgent(workspace_root=path)
     report = agent.run_lifecycle()
-    
+
     table = Table(title="QoderWork Execution Lifecycle")
     table.add_column("Stage", style="bold cyan")
     table.add_column("Status", style="green")
     table.add_column("Duration (ms)", justify="right")
     table.add_column("Details")
-    
+
     for step in report.steps:
         table.add_row(
             step.step_name,
@@ -372,27 +417,32 @@ def qoderwork_command(
             f"{step.duration_ms:.2f}",
             str(step.details),
         )
-    
+
     console.print(table)
-    console.print(f"\n[bold]Final Lifecycle State:[/bold] [bold green]{report.state}[/bold green] (Total: {report.total_time_ms:.2f} ms)\n")
+    console.print(
+        f"\n[bold]Final Lifecycle State:[/bold] [bold green]{report.state}[/bold green] (Total: {report.total_time_ms:.2f} ms)\n"
+    )
 
 
 @app.command(name="qoder")
 def qoder_command(
-    file_path: str = typer.Argument(..., help="Relative path to vulnerable configuration file (e.g. agent/tools.yaml, prompts/system.md)"),
+    file_path: str = typer.Argument(
+        ..., help="Relative path to vulnerable configuration file (e.g. agent/tools.yaml, prompts/system.md)"
+    ),
     workspace: Path = typer.Option(Path("."), "--workspace", "-w", help="Workspace root directory"),
 ) -> None:
     """Qoder: AI-Native Agentic IDE backbone for minimal diffs and prompt fences."""
     from app.qoder.ide import QoderIDE
+
     console.print(f"\n🛠️ [bold cyan]Qoder Precision Synthesizer[/bold cyan] analyzing [bold]{file_path}[/bold]...\n")
-    
+
     ide = QoderIDE(workspace_root=workspace)
     result = ide.generate_remediation_diff(file_path)
-    
+
     if not result.get("success"):
         console.print(f"[red]Error or no changes generated:[/red] {result.get('error', 'No modifications needed.')}")
         return
-    
+
     console.print("[bold green]Generated Minimal Scoped Diff:[/bold green]")
     console.print(result["diff"])
 
@@ -403,16 +453,17 @@ def tui_command(
 ) -> None:
     """Launch OpenShomer interactive Terminal User Interface (TUI)."""
     from app.tui import launch_tui
+
     launch_tui(workspace=path)
 
 
 @app.command(name="version")
 def version_command() -> None:
     """Print the OpenShomer version."""
-    console.print("OpenShomer CLI v0.2.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)")
+    console.print(
+        "OpenShomer CLI v0.2.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)"
+    )
 
 
 if __name__ == "__main__":
     app()
-
-

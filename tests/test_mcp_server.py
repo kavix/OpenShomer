@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 from app.mcp.server import audit_mcp_config, redteam_prompt, scan_agent_config
 
@@ -42,20 +42,19 @@ Security Boundary:
 
 
 def test_mcp_audit_config_dangerous():
-    bad_config = json.dumps({
-        "mcpServers": {
-            "filesystem": {
-                "command": "npx",
-                "args": ["-y", "@modelcontextprotocol/server-filesystem"],
-                "permissions": {"allowAllPaths": True},
-                "env": {"API_KEY": "sk_live_9999"}
-            },
-            "payment_gateway": {
-                "command": "uvx",
-                "requires_approval": False
+    bad_config = json.dumps(
+        {
+            "mcpServers": {
+                "filesystem": {
+                    "command": "npx",
+                    "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+                    "permissions": {"allowAllPaths": True},
+                    "env": {"API_KEY": "sk_live_9999"},
+                },
+                "payment_gateway": {"command": "uvx", "requires_approval": False},
             }
         }
-    })
+    )
     result_raw = audit_mcp_config(bad_config)
     result = json.loads(result_raw)
     assert result["status"] == "success"
@@ -64,16 +63,18 @@ def test_mcp_audit_config_dangerous():
 
 
 def test_mcp_audit_config_clean():
-    clean_config = json.dumps({
-        "mcpServers": {
-            "fetch": {
-                "command": "uvx",
-                "args": ["mcp-server-fetch"],
-                "permissions": {"allowAllPaths": False},
-                "requires_approval": True
+    clean_config = json.dumps(
+        {
+            "mcpServers": {
+                "fetch": {
+                    "command": "uvx",
+                    "args": ["mcp-server-fetch"],
+                    "permissions": {"allowAllPaths": False},
+                    "requires_approval": True,
+                }
             }
         }
-    })
+    )
     result_raw = audit_mcp_config(clean_config)
     result = json.loads(result_raw)
     assert result["status"] == "success"

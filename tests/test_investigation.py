@@ -15,7 +15,7 @@ def test_investigator_diagnoses_over_permissioned_tool():
         file="agent/tools.yaml",
         tool="run_shell",
         issue="Unrestricted shell execution",
-        repository="customer-support-agent"
+        repository="customer-support-agent",
     )
 
     result = investigator.investigate(finding)

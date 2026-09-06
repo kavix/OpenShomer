@@ -40,11 +40,7 @@ class AgentRepoTools:
                     content = file_path.read_text(encoding="utf-8")
                     for idx, line in enumerate(content.splitlines(), start=1):
                         if query.lower() in line.lower():
-                            results.append({
-                                "file": rel_path,
-                                "line": idx,
-                                "snippet": line.strip()
-                            })
+                            results.append({"file": rel_path, "line": idx, "snippet": line.strip()})
                 except Exception:
                     continue
         return results
@@ -72,8 +68,4 @@ class AgentRepoTools:
     def get_prompt_context(self, prompt_path: str = "prompts/system.md") -> dict[str, Any]:
         """Reads system prompt and provides metadata."""
         content = self.read_file(prompt_path)
-        return {
-            "path": prompt_path,
-            "length_chars": len(content),
-            "content": content
-        }
+        return {"path": prompt_path, "length_chars": len(content), "content": content}

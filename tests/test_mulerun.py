@@ -15,9 +15,7 @@ def test_mulerun_webhook_processing_latency():
         "event": "push",
         "repository": {"full_name": "kavix/OpenShomer"},
         "ref": "refs/heads/main",
-        "commits": [
-            {"modified": ["agent/tools.yaml", "prompts/system.md"], "added": []}
-        ],
+        "commits": [{"modified": ["agent/tools.yaml", "prompts/system.md"], "added": []}],
     }
 
     result = runtime.process_webhook_event(payload)
@@ -31,7 +29,7 @@ def test_mulerun_webhook_processing_latency():
 def test_mulerun_hmac_verification():
     secret = "test_webhook_secret_key_12345"
     payload = json.dumps({"repository": {"full_name": "owner/repo"}}).encode("utf-8")
-    
+
     valid_sig = "sha256=" + hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
     invalid_sig = "sha256=invalid_hex_signature"
 
@@ -44,7 +42,7 @@ def test_mulerun_telemetry_subscription():
     received_events = []
 
     runtime.subscribe_telemetry(lambda evt: received_events.append(evt))
-    
+
     runtime.emit_telemetry("sandbox_execution", "jailbreak_test_started", {"test_id": "JB-001"})
     runtime.emit_telemetry("sandbox_execution", "jailbreak_test_passed", {"test_id": "JB-001"})
 

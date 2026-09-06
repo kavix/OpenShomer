@@ -16,7 +16,7 @@ As developers deploy autonomous AI agents and LLMs using tools and MCP (Model Co
 ---
 
 ### Solution *
-**OpenShomer** is an open-source autonomous agentic security engineer that closes the security loop: **Find → Investigate → Rewrite → Red-team in sandbox → Prove → GitHub PR**. 
+**OpenShomer** is an open-source autonomous agentic security engineer that closes the security loop: **Find → Investigate → Rewrite → Red-team in sandbox → Prove → GitHub PR**.
 Instead of just alerting developers, OpenShomer investigates the agent codebase, generates a minimal safe configuration and prompt patch, tests it against adversarial prompt injection and tool abuse attacks inside an isolated Docker sandbox, and automatically opens an evidence-backed Pull Request on GitHub.
 
 ---

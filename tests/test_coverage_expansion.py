@@ -37,7 +37,7 @@ def test_industrial_sarif_and_aibom_export(tmp_path):
         file="agent/tools.yaml",
         tool="run_shell",
         issue="Unrestricted shell execution",
-        repository="test/repo"
+        repository="test/repo",
     )
     sarif = IndustrialReportExporter.export_sarif([finding], tmp_path)
     assert sarif["version"] == "2.1.0"
@@ -66,7 +66,7 @@ def test_pull_request_manager_taxonomy_and_mock_pr(tmp_path):
         severity=Severity.HIGH,
         file="agent/tools.yaml",
         issue="Unrestricted tool",
-        repository="test/repo"
+        repository="test/repo",
     )
     inv = InvestigationResult(
         finding_id="SHOMER-001",
@@ -74,7 +74,7 @@ def test_pull_request_manager_taxonomy_and_mock_pr(tmp_path):
         recommended_fix="Add allow-lists",
         affected_files=["agent/tools.yaml"],
         confidence=0.95,
-        risk=Severity.HIGH
+        risk=Severity.HIGH,
     )
     val = ValidationReport(
         finding_id="SHOMER-001",
@@ -84,7 +84,7 @@ def test_pull_request_manager_taxonomy_and_mock_pr(tmp_path):
         total_redteam_tests=10,
         passed_redteam_tests=10,
         status="passed",
-        details=["Pass test 1"]
+        details=["Pass test 1"],
     )
     body = PullRequestManager.build_evidence_pr_body(finding, inv, val, "+ diff")
     assert "OWASP LLM Top 10" in body
@@ -163,7 +163,7 @@ def test_qoder_diff_synthesizer_edge_cases():
 
     orig_json = json.dumps({"mcpServers": {"filesystem": {"permissions": {"allowAllPaths": True}}}})
     res_j, diff_j = DiffSynthesizer.synthesize_mcp_json(orig_json)
-    assert "allowAllPaths\": false" in res_j or "allowAllPaths\": False" in res_j.lower()
+    assert 'allowAllPaths": false' in res_j or 'allowAllPaths": False' in res_j.lower()
 
 
 @pytest.mark.asyncio

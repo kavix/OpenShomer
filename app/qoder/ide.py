@@ -9,7 +9,7 @@ from app.qoder.python_ast import PythonASTSynthesizer
 
 class QoderIDE:
     """Qoder: AI-Native Agentic Development Backbone.
-    
+
     Translates vulnerability findings into minimal, scoped, least-privilege
     code diffs and defensive prompt fences across YAML, JSON, Markdown, and Python Agent Frameworks.
     """
@@ -53,14 +53,16 @@ class QoderIDE:
                 rewritten = self.python_synthesizer.harden_llamaindex_vector_index(rewritten)
             if "crewai" in lower:
                 rewritten = self.python_synthesizer.harden_crewai_agent(rewritten)
-            
+
             if rewritten != content:
-                diff_lines = list(difflib.unified_diff(
-                    content.splitlines(keepends=True),
-                    rewritten.splitlines(keepends=True),
-                    fromfile=f"a/{relative_path}",
-                    tofile=f"b/{relative_path}",
-                ))
+                diff_lines = list(
+                    difflib.unified_diff(
+                        content.splitlines(keepends=True),
+                        rewritten.splitlines(keepends=True),
+                        fromfile=f"a/{relative_path}",
+                        tofile=f"b/{relative_path}",
+                    )
+                )
                 diff = "".join(diff_lines)
 
         return {

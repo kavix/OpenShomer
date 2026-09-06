@@ -13,7 +13,7 @@ graph TD
         WH["GitHub Webhook Ingress (HMAC-SHA256)<br/>app/mulerun/webhooks.py"]
         QWEN["Alibaba Cloud Qwen Reasoning Gateway<br/>app/agents/providers.py"]
         TELEM["Live Sandbox Telemetry Streamer"]
-        
+
         WH --> MR
         MR <--> QWEN
         MR <--> TELEM
@@ -24,7 +24,7 @@ graph TD
         FW["Richer Agent Graph Scanners<br/>LangChain, LlamaIndex, CrewAI, Skills<br/>app/frameworks/"]
         IA["Investigation Agent<br/>app/agents/investigator.py"]
         RT["Repo Tool Belt<br/>app/agents/tools.py"]
-        
+
         MR --> QW
         QW --> FW
         QW --> IA
@@ -35,7 +35,7 @@ graph TD
         QD["Qoder Agentic IDE Backbone<br/>app/qoder/ide.py"]
         DS["AST & Schema Diff Synthesizer<br/>app/qoder/diff_synthesizer.py"]
         PF["Defensive Prompt Fencing Engine<br/>app/qoder/prompt_fencing.py"]
-        
+
         QW --> QD
         QD --> DS
         QD --> PF
@@ -81,15 +81,15 @@ stateDiagram-v2
     [*] --> INGESTED: Finding Ingested via API
     INGESTED --> INVESTIGATING: Agent starts diagnosis
     INVESTIGATING --> INVESTIGATED: Structured InvestigationResult produced
-    
+
     INVESTIGATED --> REMEDIATING: Remediation Engine generates rewrite
     REMEDIATING --> REMEDIATED: Patch generated
     REMEDIATING --> NEEDS_HUMAN: Guardrails failed (out of bounds)
-    
+
     REMEDIATED --> VALIDATING: Sandbox created & Red-Team executed
     VALIDATING --> VALIDATED: Static + Red-Team passed
     VALIDATING --> REJECTED: Red-Team or Static failed
-    
+
     VALIDATED --> PR_OPENED: Branch created & GitHub PR opened
     PR_OPENED --> [*]
     REJECTED --> [*]
@@ -105,13 +105,13 @@ flowchart TD
     Start["Generated Patch Diff"] --> Scope{"Scope Check<br/>Touches only affected files?"}
     Scope -- "No" --> Reject1["Reject: Unauthorized file modifications"]
     Scope -- "Yes" --> Size{"Size Check<br/>Lines within blast radius limit (< 150)?"}
-    
+
     Size -- "No" --> Reject2["Reject: Diff size exceeds maximum threshold"]
     Size -- "Yes" --> PermCheck{"Permission Reduction Check<br/>No new high-risk permissions added?"}
-    
+
     PermCheck -- "No" --> Reject3["Reject: Unrestricted permissions added"]
     PermCheck -- "Yes" --> Sand["Execute in Isolated Docker Sandbox"]
-    
+
     Sand --> RedTeam{"Adversarial Red-Team Suite<br/>100% test cases blocked?"}
     RedTeam -- "No" --> Reject4["Reject: Attack path still exploitable"]
     RedTeam -- "Yes" --> Approve["APPROVED FOR PULL REQUEST"]

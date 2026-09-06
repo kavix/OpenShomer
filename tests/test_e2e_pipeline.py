@@ -4,6 +4,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_e2e_resolution_flow():
     payload = {
         "id": "SHOMER-E2E-001",
@@ -12,7 +13,7 @@ def test_e2e_resolution_flow():
         "file": "agent/tools.yaml",
         "tool": "run_shell",
         "issue": "Shell tool has unrestricted permissions",
-        "repository": "customer-support-agent"
+        "repository": "customer-support-agent",
     }
 
     client.post("/findings", json=payload)

@@ -27,10 +27,12 @@ INVESTIGATIONS_DB: dict[str, InvestigationResult] = {}
 REMEDIATIONS_DB: dict[str, RemediationResult] = {}
 VALIDATIONS_DB: dict[str, ValidationReport] = {}
 
+
 def get_workspace_root() -> Path:
     # Default to demo fixture if in test or workspace root
     base = Path(os.environ.get("OPENSHOMER_WORKSPACE", "demo/vulnerable-agent"))
     return base if base.exists() else Path(".")
+
 
 def get_redteam_dir() -> Path:
     return Path("redteam")
@@ -45,15 +47,13 @@ def ingest_finding(finding: Finding) -> FindingReceipt:
         id=finding.id,
         type=finding.type,
         severity=finding.severity,
-        message="Finding queued for autonomous investigation and remediation"
+        message="Finding queued for autonomous investigation and remediation",
     )
 
 
 @router.get("", response_model=list[Finding])
 def list_findings(
-    status: FindingStatus | None = None,
-    severity: Severity | None = None,
-    type: FindingType | None = None
+    status: FindingStatus | None = None, severity: Severity | None = None, type: FindingType | None = None
 ) -> list[Finding]:
     """List and browse all ingested findings with optional filters."""
     results = list(FINDINGS_DB.values())
@@ -79,7 +79,7 @@ def investigate_finding(finding_id: str) -> InvestigationResult:
     """Run Phase 2 Investigation on a finding."""
     if finding_id not in FINDINGS_DB:
         raise HTTPException(status_code=404, detail=f"Finding '{finding_id}' not found.")
-    
+
     finding = FINDINGS_DB[finding_id]
     finding.status = FindingStatus.INVESTIGATING
 
@@ -96,7 +96,7 @@ def remediate_finding(finding_id: str) -> RemediationResult:
     """Run Phase 3 Remediation & Guardrails on a finding."""
     if finding_id not in FINDINGS_DB:
         raise HTTPException(status_code=404, detail=f"Finding '{finding_id}' not found.")
-    
+
     finding = FINDINGS_DB[finding_id]
     investigation = INVESTIGATIONS_DB.get(finding_id)
     if not investigation:
@@ -118,7 +118,7 @@ def validate_finding(finding_id: str) -> ValidationReport:
     """Run Phase 4 Sandbox & Red-Teaming on a finding."""
     if finding_id not in FINDINGS_DB:
         raise HTTPException(status_code=404, detail=f"Finding '{finding_id}' not found.")
-    
+
     finding = FINDINGS_DB[finding_id]
     remediation = REMEDIATIONS_DB.get(finding_id)
     diff = remediation.diff if remediation else ""
@@ -137,7 +137,7 @@ def resolve_finding_e2e(finding_id: str) -> ResolutionResult:
     """Execute complete workflow: Ingest -> Investigate -> Remediate -> Sandbox Red-Team -> PR."""
     if finding_id not in FINDINGS_DB:
         raise HTTPException(status_code=404, detail=f"Finding '{finding_id}' not found.")
-    
+
     finding = FINDINGS_DB[finding_id]
     ws = get_workspace_root()
     rt_dir = get_redteam_dir()
@@ -178,5 +178,5 @@ def resolve_finding_e2e(finding_id: str) -> ResolutionResult:
         remediation=remediation,
         validation=validation,
         pr_url=pr_url,
-        evidence_summary=evidence_summary
+        evidence_summary=evidence_summary,
     )

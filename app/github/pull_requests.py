@@ -12,49 +12,46 @@ class PullRequestManager:
     def get_security_taxonomy_mapping(finding_type_str: str) -> dict[str, str]:
         """Maps finding to MITRE ATLAS, OWASP LLM Top 10, NIST AI RMF, and CWE taxonomy."""
         ft = finding_type_str.upper()
-        
+
         if "OVER_PERMISSIONED" in ft or "AGENCY" in ft:
             return {
                 "owasp": "LLM06:2025 - Excessive Agency",
                 "mitre_atlas": "AML.T0043 (Unbounded Tool Invocation) / AML.TA0001 (Execution)",
                 "cwe": "CWE-78 (Command Injection) / CWE-862 (Missing Authorization)",
-                "nist": "NIST AI RMF: MANAGE 2.4 - Autonomous Boundary Governance"
+                "nist": "NIST AI RMF: MANAGE 2.4 - Autonomous Boundary Governance",
             }
         elif "PROMPT_INJECTION" in ft:
             return {
                 "owasp": "LLM01:2025 - Prompt Injection",
                 "mitre_atlas": "AML.T0051 (Direct Prompt Injection) / AML.T0054 (LLM Jailbreak)",
                 "cwe": "CWE-78 (Command/Prompt Injection)",
-                "nist": "NIST AI RMF: MEASURE 2.5 - Adversarial Robustness Validation"
+                "nist": "NIST AI RMF: MEASURE 2.5 - Adversarial Robustness Validation",
             }
         elif "SECRET" in ft or "DISCLOSURE" in ft or "LEAK" in ft:
             return {
                 "owasp": "LLM02:2025 - Sensitive Information Disclosure",
                 "mitre_atlas": "AML.T0056 (System Prompt Key Extraction) / AML.TA0005 (Credential Access)",
                 "cwe": "CWE-798 (Use of Hardcoded Credentials)",
-                "nist": "NIST AI RMF: GOVERN 1.2 - Secret & Credential Isolation"
+                "nist": "NIST AI RMF: GOVERN 1.2 - Secret & Credential Isolation",
             }
         elif "EXFILTRATION" in ft or "SSRF" in ft:
             return {
                 "owasp": "LLM02:2025 - Sensitive Information Disclosure / Data Exfiltration",
                 "mitre_atlas": "AML.T0044 (Markdown Data Exfiltration) / AML.T0045 (SSRF Tool Egress)",
                 "cwe": "CWE-918 (Server-Side Request Forgery)",
-                "nist": "NIST AI RMF: MANAGE 1.3 - Outbound Network & Boundary Controls"
+                "nist": "NIST AI RMF: MANAGE 1.3 - Outbound Network & Boundary Controls",
             }
         else:
             return {
                 "owasp": "LLM06:2025 - Autonomous Agent Misconfiguration",
                 "mitre_atlas": "AML.TA0003 - Privilege Escalation",
                 "cwe": "CWE-862 - Missing Authorization",
-                "nist": "NIST AI RMF: MAP 1.1 - Threat Identification"
+                "nist": "NIST AI RMF: MAP 1.1 - Threat Identification",
             }
 
     @staticmethod
     def build_evidence_pr_body(
-        finding: Finding,
-        investigation: InvestigationResult,
-        validation: ValidationReport,
-        diff_snippet: str
+        finding: Finding, investigation: InvestigationResult, validation: ValidationReport, diff_snippet: str
     ) -> str:
         # Format validation test details and safely clamp to avoid GitHub's 65,536 char limit
         if len(validation.details) > 25:
@@ -66,7 +63,7 @@ class PullRequestManager:
             report_lines = "\n".join([f"- {d}" for d in validation.details])
 
         tax = PullRequestManager.get_security_taxonomy_mapping(finding.type.value)
-        
+
         body = f"""## 🛡️ OpenShomer Security Remediation: {finding.id}
 
 ### Executive Summary
@@ -80,10 +77,10 @@ class PullRequestManager:
 ### Standardized Threat Taxonomy & Compliance Mapping
 | Standard / Framework | Classification & Identifier |
 |---|---|
-| **OWASP LLM Top 10** | `{tax['owasp']}` |
-| **MITRE ATLAS** | `{tax['mitre_atlas']}` |
-| **CWE (Common Weakness)** | `{tax['cwe']}` |
-| **NIST AI RMF** | `{tax['nist']}` |
+| **OWASP LLM Top 10** | `{tax["owasp"]}` |
+| **MITRE ATLAS** | `{tax["mitre_atlas"]}` |
+| **CWE (Common Weakness)** | `{tax["cwe"]}` |
+| **NIST AI RMF** | `{tax["nist"]}` |
 
 ---
 
@@ -146,7 +143,9 @@ class PullRequestManager:
                 target_repo = env_repo
             else:
                 try:
-                    url = subprocess.check_output(["git", "config", "--get", "remote.origin.url"], text=True, stderr=subprocess.DEVNULL).strip()
+                    url = subprocess.check_output(
+                        ["git", "config", "--get", "remote.origin.url"], text=True, stderr=subprocess.DEVNULL
+                    ).strip()
                     m = re.search(r"github\.com[:/]([^/]+/[^/.]+)", url)
                     if m:
                         target_repo = m.group(1).removesuffix(".git")
@@ -156,7 +155,9 @@ class PullRequestManager:
         if token and target_repo and "/" in target_repo:
             try:
                 import time
+
                 from github import Auth, Github
+
                 g = Github(auth=Auth.Token(token))
                 repo = g.get_repo(target_repo)
 
@@ -184,7 +185,7 @@ class PullRequestManager:
                     repo.get_branch(branch_name)
                 except Exception:
                     sb = repo.get_branch(default_branch)
-                    ref = repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=sb.commit.sha)
+                    repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=sb.commit.sha)
 
                 # Helper to locate file in repository (handles nested repo structures like demo/vulnerable-agent)
                 def _get_repo_file(r, ref, path_to_find):
@@ -214,7 +215,9 @@ class PullRequestManager:
                         try:
                             original_text = existing_file.decoded_content.decode("utf-8")
                             from pathlib import Path
+
                             from app.agents.remediation import RemediationEngine
+
                             remediator = RemediationEngine(workspace_root=Path("."))
                             rewritten_text = remediator._rewrite_file_content(finding.file, original_text, finding.type)
 
@@ -245,7 +248,7 @@ class PullRequestManager:
                         title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
                         body=pr_body,
                         head=branch_name,
-                        base=default_branch
+                        base=default_branch,
                     )
                     return pr.html_url
                 except Exception:
@@ -262,16 +265,24 @@ class PullRequestManager:
                         if existing_file:
                             original_text = existing_file.decoded_content.decode("utf-8")
                             from pathlib import Path
+
                             from app.agents.remediation import RemediationEngine
+
                             remediator = RemediationEngine(workspace_root=Path("."))
                             rewritten_text = remediator._rewrite_file_content(finding.file, original_text, finding.type)
                             if rewritten_text and rewritten_text != original_text:
-                                repo.update_file(path=resolved_path, message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}", content=rewritten_text, sha=existing_file.sha, branch=alt_branch)
+                                repo.update_file(
+                                    path=resolved_path,
+                                    message=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
+                                    content=rewritten_text,
+                                    sha=existing_file.sha,
+                                    branch=alt_branch,
+                                )
                     pr = repo.create_pull(
                         title=f"🛡️ Fix({finding.id}): {finding.issue[:60]}",
                         body=pr_body,
                         head=alt_branch,
-                        base=default_branch
+                        base=default_branch,
                     )
                     return pr.html_url
             except Exception as outer_err:

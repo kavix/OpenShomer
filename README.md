@@ -10,7 +10,7 @@ OpenShomer discovers risky patterns in AI agent configurations, investigates the
 
 [![Watch OpenShomer Demo Video](https://img.youtube.com/vi/b9bJ8YaUV3U/maxresdefault.jpg)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)
 
-[![Watch Demo on YouTube](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)  
+[![Watch Demo on YouTube](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)
 *▶️ Click the player preview above to watch the 3-minute OpenShomer walkthrough demo*
 
 </div>
@@ -442,5 +442,5 @@ For security vulnerabilities, please refer to our [Security Policy](SECURITY.md)
 
 ---
 
-**OpenShomer**  
+**OpenShomer**
 *Find the risky agent config. Rewrite it safely. Prove the attack path is closed. Open the PR.*

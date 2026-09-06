@@ -31,18 +31,13 @@ tools:
 
 
 def test_qoder_diff_synthesizer_mcp_json():
-    unsecure_json = json.dumps({
-        "mcpServers": {
-            "filesystem": {
-                "permissions": {
-                    "allowAllPaths": True
-                },
-                "env": {
-                    "API_KEY": "sk_live_123456789abcdef"
-                }
+    unsecure_json = json.dumps(
+        {
+            "mcpServers": {
+                "filesystem": {"permissions": {"allowAllPaths": True}, "env": {"API_KEY": "sk_live_123456789abcdef"}}
             }
         }
-    })
+    )
     rewritten, diff = DiffSynthesizer.synthesize_mcp_json(unsecure_json)
     data = json.loads(rewritten)
     assert data["mcpServers"]["filesystem"]["permissions"]["allowAllPaths"] is False
@@ -52,12 +47,15 @@ def test_qoder_diff_synthesizer_mcp_json():
 def test_qoder_ide_generate_remediation_diff(tmp_path: Path):
     tools_path = tmp_path / "agent" / "tools.yaml"
     tools_path.parent.mkdir(parents=True)
-    tools_path.write_text("""
+    tools_path.write_text(
+        """
 tools:
   - name: terminal
     permissions:
       - "shell:unrestricted"
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     ide = QoderIDE(workspace_root=tmp_path)
     res = ide.generate_remediation_diff("agent/tools.yaml")

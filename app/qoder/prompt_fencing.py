@@ -1,8 +1,6 @@
-
-
 class PromptFenceBuilder:
     """Qoder Prompt Fencing Engine.
-    
+
     Translates raw and vulnerable prompt configurations into fenced, structured,
     least-privilege prompt architectures with delimiter isolation and anti-jailbreak directives.
     """
@@ -19,7 +17,7 @@ class PromptFenceBuilder:
     def apply_fence(cls, system_prompt: str, role_description: str | None = None) -> str:
         """Wrap system prompt in strict defensive prompt fences."""
         cleaned_prompt = system_prompt.strip()
-        
+
         # If already fenced, return
         if "<security_policy>" in cleaned_prompt and "<system_instructions>" in cleaned_prompt:
             return cleaned_prompt

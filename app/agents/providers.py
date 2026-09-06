@@ -18,7 +18,7 @@ class LLMProvider(ABC):
 
 class AlibabaQwenProvider(LLMProvider):
     """Alibaba Cloud Model Studio (Bailian / DashScope) Qwen LLM Provider.
-    
+
     Supports Qwen reasoning models: qwen-max, qwen-plus, qwen-turbo, qwen-coder-plus.
     """
 
@@ -32,14 +32,21 @@ class AlibabaQwenProvider(LLMProvider):
         base_url: str | None = None,
         timeout: float = 30.0,
     ):
-        key = api_key or os.getenv("DASHSCOPE_API_KEY") or os.getenv("ALIBABA_CLOUD_API_KEY") or os.getenv("ALIBABA_API_KEY")
+        key = (
+            api_key
+            or os.getenv("DASHSCOPE_API_KEY")
+            or os.getenv("ALIBABA_CLOUD_API_KEY")
+            or os.getenv("ALIBABA_API_KEY")
+        )
         super().__init__(api_key=key, model=model or self.DEFAULT_MODEL)
         self.base_url = base_url or self.BASE_URL
         self.timeout = timeout
 
     def generate(self, prompt: str, system_prompt: str | None = None, temperature: float = 0.2) -> str:
         if not self.api_key:
-            raise ValueError("Alibaba Cloud DashScope API key is required (set DASHSCOPE_API_KEY or ALIBABA_CLOUD_API_KEY).")
+            raise ValueError(
+                "Alibaba Cloud DashScope API key is required (set DASHSCOPE_API_KEY or ALIBABA_CLOUD_API_KEY)."
+            )
 
         messages = []
         if system_prompt:

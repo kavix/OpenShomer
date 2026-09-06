@@ -19,5 +19,5 @@ __all__ = [
     "RemediationResult",
     "ResolutionResult",
     "Severity",
-    "ValidationReport"
+    "ValidationReport",
 ]

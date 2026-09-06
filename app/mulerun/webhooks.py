@@ -14,11 +14,7 @@ class GitHubWebhookVerifier:
         if not signature_header or not signature_header.startswith("sha256="):
             return False
 
-        expected_sig = "sha256=" + hmac.new(
-            secret.encode("utf-8"),
-            payload_bytes,
-            hashlib.sha256
-        ).hexdigest()
+        expected_sig = "sha256=" + hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
 
         return hmac.compare_digest(expected_sig, signature_header)
 
@@ -27,7 +23,7 @@ class GitHubWebhookVerifier:
         """Extract repository, commits, and modified files from GitHub webhook."""
         repo = payload.get("repository", {}).get("full_name", "unknown/repo")
         ref = payload.get("ref", "refs/heads/main")
-        
+
         modified_files = set()
         if event_name == "push":
             for commit in payload.get("commits", []):

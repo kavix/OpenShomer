@@ -35,7 +35,7 @@ class MuleRunResult(BaseModel):
 
 class MuleRunRuntime:
     """MuleRun: Event-Driven AI Workflow Runtime.
-    
+
     Orchestrates automated security workflows, connects Alibaba Cloud Qwen reasoning
     models, GitHub repository webhooks, and sandbox execution telemetry into a unified runtime.
     """
@@ -80,7 +80,7 @@ class MuleRunRuntime:
     ) -> dict[str, Any]:
         """Ingest and normalize a GitHub repository webhook event in < 10ms with HMAC security."""
         start_time = time.time()
-        
+
         # Verify HMAC signature if provided
         if raw_bytes and signature:
             is_valid = GitHubWebhookVerifier.verify_signature(raw_bytes, secret or "", signature)
@@ -89,7 +89,7 @@ class MuleRunRuntime:
 
         event_name = webhook_payload.get("event", "push")
         parsed = GitHubWebhookVerifier.parse_github_event(event_name, webhook_payload)
-        
+
         duration_ms = (time.time() - start_time) * 1000
         self.emit_telemetry(
             stage="webhook_ingestion",
@@ -117,7 +117,11 @@ class MuleRunRuntime:
             if isinstance(self.llm_provider, AlibabaQwenProvider):
                 response_text = self.llm_provider.generate(triage_prompt, temperature=0.1)
             else:
-                response_text = self.llm_provider.generate(triage_prompt) if self.llm_provider else "SEVERITY: HIGH - Unchecked execution."
+                response_text = (
+                    self.llm_provider.generate(triage_prompt)
+                    if self.llm_provider
+                    else "SEVERITY: HIGH - Unchecked execution."
+                )
         except Exception as e:
             response_text = f"Fallback triage: HIGH ({e!s})"
 
