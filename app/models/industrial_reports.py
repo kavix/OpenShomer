@@ -71,7 +71,7 @@ class IndustrialReportExporter:
                     "tool": {
                         "driver": {
                             "name": "OpenShomer",
-                            "version": "0.3.0",
+                            "version": "0.4.0",
                             "informationUri": "https://github.com/kavix/OpenShomer",
                             "rules": rules,
                         }
@@ -131,7 +131,7 @@ class IndustrialReportExporter:
             "version": 1,
             "metadata": {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "tools": [{"vendor": "OpenShomer", "name": "OpenShomer AI Auditor", "version": "0.3.0"}],
+                "tools": [{"vendor": "OpenShomer", "name": "OpenShomer AI Auditor", "version": "0.4.0"}],
                 "component": {"type": "application", "name": workspace_root.name, "version": "1.0.0"},
             },
             "components": components,

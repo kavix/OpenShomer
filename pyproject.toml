@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openshomer"
-version = "0.3.0"
+version = "0.4.0"
 description = "Autonomous Agentic Security Engineer for LLM system prompts, agent configs, tool definitions, and MCP servers"
 readme = "README.md"
 requires-python = ">=3.10"

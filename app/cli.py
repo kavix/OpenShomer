@@ -461,7 +461,7 @@ def tui_command(
 def version_command() -> None:
     """Print the OpenShomer version."""
     console.print(
-        "OpenShomer CLI v0.2.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)"
+        "OpenShomer CLI v0.4.0 — Autonomous AI Agent Security Engineer (Powered by MuleRun, QoderWork & Qoder)"
     )
 
 
