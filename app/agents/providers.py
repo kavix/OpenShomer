@@ -141,6 +141,44 @@ class GeminiProvider(LLMProvider):
             return ""
 
 
+class AnthropicProvider(LLMProvider):
+    """Anthropic Claude models provider (e.g. claude-3-5-sonnet, claude-3-haiku)."""
+
+    DEFAULT_MODEL = "claude-3-5-sonnet-20241022"
+
+    def __init__(self, api_key: str | None = None, model: str | None = None, timeout: float = 30.0):
+        key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        super().__init__(api_key=key, model=model or self.DEFAULT_MODEL)
+        self.timeout = timeout
+
+    def generate(self, prompt: str, system_prompt: str | None = None, temperature: float = 0.2) -> str:
+        if not self.api_key:
+            raise ValueError("Anthropic API key is required (set ANTHROPIC_API_KEY).")
+
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "max_tokens": 4096,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+        }
+        if system_prompt:
+            payload["system"] = system_prompt
+
+        with httpx.Client(timeout=self.timeout) as client:
+            response = client.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            content = data.get("content", [])
+            if content and "text" in content[0]:
+                return content[0]["text"]
+            return ""
+
+
 def get_llm_provider(
     provider_name: str | None = None,
     model: str | None = None,
@@ -151,6 +189,8 @@ def get_llm_provider(
 
     if name in ("alibaba", "qwen", "dashscope", "bailian"):
         return AlibabaQwenProvider(api_key=api_key, model=model)
+    elif name in ("anthropic", "claude"):
+        return AnthropicProvider(api_key=api_key, model=model)
     elif name == "openai":
         return OpenAIProvider(api_key=api_key, model=model)
     elif name in ("gemini", "google"):
@@ -159,6 +199,8 @@ def get_llm_provider(
     # Auto-detection from environment if not explicitly set
     if os.getenv("DASHSCOPE_API_KEY") or os.getenv("ALIBABA_CLOUD_API_KEY") or os.getenv("ALIBABA_API_KEY"):
         return AlibabaQwenProvider(api_key=api_key, model=model)
+    elif os.getenv("ANTHROPIC_API_KEY"):
+        return AnthropicProvider(api_key=api_key, model=model)
     elif os.getenv("OPENAI_API_KEY"):
         return OpenAIProvider(api_key=api_key, model=model)
     elif os.getenv("GEMINI_API_KEY"):

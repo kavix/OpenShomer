@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.agents.providers import GeminiProvider, OpenAIProvider
+from app.agents.providers import AnthropicProvider, GeminiProvider, OpenAIProvider, get_llm_provider
 from app.agents.tools import AgentRepoTools
 from app.fast_io import FastEngineSerializer
 from app.github.branches import BranchManager
@@ -122,6 +122,18 @@ def test_fast_io_edge_cases(tmp_path):
 
 
 def test_openai_and_gemini_providers():
+    ap = AnthropicProvider(api_key="dummy_anthropic_key")
+    with patch("httpx.Client.post") as mock_post:
+        mock_resp = MagicMock(status_code=200)
+        mock_resp.json.return_value = {"content": [{"text": "Anthropic Claude Response"}]}
+        mock_post.return_value = mock_resp
+        res = ap.generate("Test prompt", system_prompt="Be secure")
+        assert res == "Anthropic Claude Response"
+
+    # Test auto-detection via get_llm_provider
+    prov = get_llm_provider("anthropic", api_key="dummy_key")
+    assert isinstance(prov, AnthropicProvider)
+
     op = OpenAIProvider(api_key="dummy_key")
     with patch("httpx.Client.post") as mock_post:
         mock_resp = MagicMock(status_code=200)
