@@ -336,16 +336,48 @@ make run
 
 ### Model Context Protocol (MCP) Server
 
-Connect OpenShomer directly to **Claude Desktop**, **Claude Code**, **Cursor**, or **Windsurf** to audit agent prompts and configurations in real time.
+Connect OpenShomer directly to **Claude Desktop**, **Claude Code**, **Cursor**, **Windsurf**, or **Zed** to audit agent prompts and configurations in real time. Full setup instructions are documented in [MCP Guide](docs/MCP_GUIDE.md).
 
-#### Claude Desktop Configuration (`claude_desktop_config.json`)
+#### 1-Click Install via Smithery
+```bash
+# Claude Desktop
+npx -y @smithery/cli install @kavix/OpenShomer --client claude
 
+# Cursor
+npx -y @smithery/cli install @kavix/OpenShomer --client cursor
+```
+
+#### Manual Configuration (`claude_desktop_config.json` or `.cursor/mcp.json`)
+
+**Using uvx (Zero-install Python runtime):**
 ```json
 {
   "mcpServers": {
     "openshomer": {
       "command": "uvx",
-      "args": ["--from", "openshomer", "openshomer-mcp"]
+      "args": [
+        "--from",
+        "git+https://github.com/kavix/OpenShomer.git",
+        "openshomer-mcp"
+      ]
+    }
+  }
+}
+```
+
+**Using Docker (GitHub Container Registry):**
+```json
+{
+  "mcpServers": {
+    "openshomer": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "ghcr.io/kavix/openshomer:latest",
+        "mcp"
+      ]
     }
   }
 }

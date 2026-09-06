@@ -1,0 +1,20 @@
+# Smithery MCP Server Manifest for OpenShomer
+# Enables automated indexing and zero-config client installation via Smithery CLI.
+# https://smithery.ai
+
+startCommand:
+  type: stdio
+configSchema:
+  type: object
+  properties:
+    githubToken:
+      type: string
+      description: "Optional GitHub Personal Access Token for remote repository scanning and automated pull request generation."
+commandFunction: |-
+  (config) => ({
+    command: 'uvx',
+    args: ['--from', 'git+https://github.com/kavix/OpenShomer.git', 'openshomer-mcp'],
+    env: config && config.githubToken ? { GITHUB_TOKEN: config.githubToken } : {}
+  })
+exampleConfig:
+  githubToken: ""
