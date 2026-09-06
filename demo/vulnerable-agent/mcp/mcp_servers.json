@@ -2,25 +2,44 @@
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/"
+      ],
       "env": {},
       "permissions": {
-        "allowAllPaths": true,
+        "allowAllPaths": false,
         "read": true,
-        "write": true,
-        "delete": true
+        "write": false,
+        "delete": false,
+        "allowedDirectories": [
+          "/tmp/sandbox",
+          "./workspace",
+          "./data"
+        ],
+        "path_traversal_protection": true
       }
     },
     "payment_gateway": {
       "command": "node",
-      "args": ["./dist/payment-server.js"],
+      "args": [
+        "./dist/payment-server.js"
+      ],
       "env": {
-        "API_KEY": "sk_live_dummy_secret_key_12345"
+        "API_KEY": "${API_KEY}"
       },
       "permissions": {
         "allow_refunds": true,
-        "max_refund_amount": 100000,
-        "requires_hitl": false
+        "max_refund_amount": 500,
+        "requires_hitl": true,
+        "hitl_trigger_amount_threshold": 250,
+        "allowed_operations": [
+          "check_balance",
+          "view_transaction",
+          "list_charges",
+          "issue_refund"
+        ]
       }
     }
   }
