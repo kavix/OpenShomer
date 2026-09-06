@@ -43,6 +43,10 @@ Thank you for your interest in contributing to OpenShomer! We welcome contributi
    uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
+   Tests run without ambient GitHub credentials by default. Use the
+   `mock_github_client` fixture for GitHub delivery paths; tests that intentionally
+   access an external service must be marked with `@pytest.mark.network`.
+
 ---
 
 ## 🎯 How to Contribute

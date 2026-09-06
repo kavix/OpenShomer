@@ -51,6 +51,9 @@ package = true
 testpaths = ["tests", "demo/vulnerable-agent/tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+markers = [
+    "network: test intentionally allowed to access external network services",
+]
 
 [tool.ruff]
 line-length = 120
