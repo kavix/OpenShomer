@@ -71,3 +71,34 @@ def test_cli_fix_demo_vulnerable_agent():
     assert result.exit_code == 0
     assert "OpenShomer Autonomous Remediation Engine" in result.stdout
     assert "SHOMER-001" in result.stdout
+
+
+def test_cli_scan_flags_missing_vector_metadata_filter(tmp_path):
+    (tmp_path / "rag_chain.py").write_text(
+        """
+from langchain_core.vectorstores import VectorStoreRetriever
+
+retriever = VectorStoreRetriever(vectorstore=store)
+""",
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["scan", str(tmp_path), "--json", "--no-exit-code"])
+    assert result.exit_code == 0
+    findings = json.loads(result.stdout)
+    assert any("MISSING_VECTOR_METADATA_FILTER" in f["issue"] for f in findings)
+    assert any(f["type"] == "LLM08_VECTOR_AND_EMBEDDING_WEAKNESS" for f in findings)
+
+
+def test_cli_fix_generates_tenant_filter_diff(tmp_path):
+    (tmp_path / "rag_chain.py").write_text(
+        """
+from langchain_core.vectorstores import VectorStoreRetriever
+
+retriever = store.as_retriever()
+""",
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["fix", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "OpenShomer Autonomous Remediation Engine" in result.stdout
+    assert "LLM08_VECTOR_AND_EMBEDDING_WEAKNESS" in result.stdout

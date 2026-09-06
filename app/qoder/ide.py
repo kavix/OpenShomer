@@ -37,13 +37,22 @@ class QoderIDE:
         elif relative_path.endswith((".md", ".prompt")) or "prompt" in relative_path:
             rewritten, diff = self.diff_synthesizer.synthesize_prompt_fence(content, filename=relative_path)
         elif relative_path.endswith(".py"):
-            # Python Frameworks (LangChain, LlamaIndex, CrewAI)
-            if "langchain" in content.lower():
-                rewritten = self.python_synthesizer.harden_langchain_agent(content)
-            elif "llamaindex" in content.lower() or "functiontool" in content.lower():
-                rewritten = self.python_synthesizer.harden_llamaindex_tool(content)
-            elif "crewai" in content.lower():
-                rewritten = self.python_synthesizer.harden_crewai_agent(content)
+            # Python Frameworks (LangChain, LlamaIndex, CrewAI) plus v0.4 vector retrieval
+            lower = content.lower()
+            rewritten = content
+            if "langchain" in lower or "vectorstoreretriever" in lower:
+                rewritten = self.python_synthesizer.harden_langchain_agent(rewritten)
+                rewritten = self.python_synthesizer.harden_langchain_vector_retriever(rewritten)
+            if (
+                "llamaindex" in lower
+                or "llama_index" in lower
+                or "functiontool" in lower
+                or "vectorstoreindex" in lower
+            ):
+                rewritten = self.python_synthesizer.harden_llamaindex_tool(rewritten)
+                rewritten = self.python_synthesizer.harden_llamaindex_vector_index(rewritten)
+            if "crewai" in lower:
+                rewritten = self.python_synthesizer.harden_crewai_agent(rewritten)
             
             if rewritten != content:
                 diff_lines = list(difflib.unified_diff(

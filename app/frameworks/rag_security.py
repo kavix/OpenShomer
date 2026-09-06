@@ -2,6 +2,8 @@ import re
 from typing import Any
 from pydantic import BaseModel, Field
 
+from app.models.findings import Finding, FindingType, Severity
+
 
 class RAGSecurityFinding(BaseModel):
     rule_id: str
@@ -72,3 +74,79 @@ class RAGSecurityInspector:
             )
 
         return findings
+
+    def extract_query_config_from_source(self, source: str) -> dict[str, Any]:
+        """Best-effort parse of filter/where and top_k/k from Python retrieval call sites."""
+        config: dict[str, Any] = {}
+
+        # 1. Tenant metadata filter (filter=, where=, MetadataFilters, or dict keys)
+        has_filter = bool(
+            re.search(r"(?:filter|where)\s*=", source)
+            or "MetadataFilters" in source
+            or re.search(r"['\"](?:filter|where)['\"]\s*:", source)
+        )
+        if has_filter:
+            config["filter"] = {"present": True}
+
+        # 2. Retrieval breadth (similarity_top_k, top_k, or search_kwargs k)
+        k_match = re.search(r"(?:similarity_top_k|top_k)\s*=\s*(\d+)", source)
+        dict_k = re.search(r"['\"]k['\"]\s*:\s*(\d+)", source)
+        kw_k = re.search(r"(?<![A-Za-z0-9_])k\s*=\s*(\d+)", source)
+        if k_match:
+            config["top_k"] = int(k_match.group(1))
+        elif dict_k:
+            config["top_k"] = int(dict_k.group(1))
+        elif kw_k:
+            config["top_k"] = int(kw_k.group(1))
+
+        return config
+
+    def _iter_call_args(self, source: str, func_name: str) -> list[str]:
+        """Collect argument snippets for each func_name( call using balanced parentheses."""
+        args_list: list[str] = []
+        for match in re.finditer(rf"(?<![A-Za-z0-9_]){re.escape(func_name)}\s*\(", source):
+            open_idx = match.end() - 1
+            depth = 0
+            for i in range(open_idx, len(source)):
+                if source[i] == "(":
+                    depth += 1
+                elif source[i] == ")":
+                    depth -= 1
+                    if depth == 0:
+                        args_list.append(source[open_idx + 1:i])
+                        break
+        return args_list
+
+    def inspect_python_retrieval_source(self, source: str) -> list[RAGSecurityFinding]:
+        """Inspects each LangChain/LlamaIndex retrieval call for missing filters and unbounded top_k."""
+        call_args: list[str] = []
+        for func_name in ("as_retriever", "as_query_engine", "similarity_search", "VectorStoreRetriever"):
+            call_args.extend(self._iter_call_args(source, func_name))
+        snippets = call_args or [source]
+        merged: list[RAGSecurityFinding] = []
+        seen: set[str] = set()
+        for snippet in snippets:
+            for finding in self.inspect_vector_query_config(self.extract_query_config_from_source(snippet)):
+                if finding.rule_id not in seen:
+                    seen.add(finding.rule_id)
+                    merged.append(finding)
+        return merged
+
+    def to_pipeline_finding(
+        self,
+        rag_finding: RAGSecurityFinding,
+        *,
+        file: str,
+        finding_id: str,
+        repository: str,
+    ) -> Finding:
+        """Bridges runtime RAG rule hits onto the scan/fix Finding pipeline."""
+        return Finding(
+            id=finding_id,
+            type=FindingType.VECTOR_AND_EMBEDDING_WEAKNESS,
+            severity=Severity(rag_finding.severity),
+            file=file,
+            issue=f"{rag_finding.rule_id}: {rag_finding.issue}",
+            repository=repository,
+            metadata={"rule_id": rag_finding.rule_id, **rag_finding.metadata},
+        )

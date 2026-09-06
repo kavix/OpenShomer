@@ -5,6 +5,7 @@ from app.frameworks.crewai import CrewAIScanner
 from app.frameworks.langchain import LangChainScanner
 from app.frameworks.llamaindex import LlamaIndexScanner
 from app.frameworks.skills import SkillFileScanner
+from app.models.findings import FindingType
 
 
 def test_skill_file_scanner(tmp_path: Path):
@@ -91,3 +92,76 @@ def test_scan_all_agent_frameworks_combined(tmp_path: Path):
 
     findings = scan_all_agent_frameworks(tmp_path)
     assert len(findings) == 2
+
+
+def test_langchain_vectorstore_retriever_missing_filter(tmp_path: Path):
+    agent_file = tmp_path / "rag_chain.py"
+    agent_file.write_text(
+        """
+from langchain_core.vectorstores import VectorStoreRetriever
+
+retriever = VectorStoreRetriever(vectorstore=store)
+chunks = retriever.vectorstore.similarity_search(query)
+""",
+        encoding="utf-8",
+    )
+
+    findings = LangChainScanner.scan_langchain_agents(tmp_path)
+    assert any(f.metadata.get("rule_id") == "MISSING_VECTOR_METADATA_FILTER" for f in findings)
+    assert any(f.type == FindingType.VECTOR_AND_EMBEDDING_WEAKNESS for f in findings)
+    assert any("MISSING_VECTOR_METADATA_FILTER" in f.issue for f in findings)
+
+
+def test_langchain_vectorstore_retriever_unbounded_top_k(tmp_path: Path):
+    agent_file = tmp_path / "rag_chain.py"
+    agent_file.write_text(
+        """
+from langchain_core.vectorstores import VectorStoreRetriever
+
+retriever = VectorStoreRetriever(
+    vectorstore=store,
+    search_kwargs={"filter": {"tenant_id": tenant_id}, "k": 200},
+)
+""",
+        encoding="utf-8",
+    )
+
+    findings = LangChainScanner.scan_langchain_agents(tmp_path)
+    assert any(f.metadata.get("rule_id") == "UNBOUNDED_VECTOR_TOP_K" for f in findings)
+    assert not any(f.metadata.get("rule_id") == "MISSING_VECTOR_METADATA_FILTER" for f in findings)
+
+
+def test_langchain_flags_unfiltered_search_beside_filtered_retriever(tmp_path: Path):
+    agent_file = tmp_path / "rag_chain.py"
+    agent_file.write_text(
+        """
+from langchain_core.vectorstores import VectorStoreRetriever
+
+retriever = VectorStoreRetriever(
+    vectorstore=store,
+    search_kwargs={"filter": {"tenant_id": tenant_id}, "k": 4},
+)
+chunks = store.similarity_search(query)
+""",
+        encoding="utf-8",
+    )
+
+    findings = LangChainScanner.scan_langchain_agents(tmp_path)
+    assert any(f.metadata.get("rule_id") == "MISSING_VECTOR_METADATA_FILTER" for f in findings)
+
+
+def test_llamaindex_vectorstore_index_missing_filter(tmp_path: Path):
+    agent_file = tmp_path / "llama_rag.py"
+    agent_file.write_text(
+        """
+from llama_index.core import VectorStoreIndex
+
+index = VectorStoreIndex.from_documents(docs)
+engine = index.as_query_engine(similarity_top_k=8)
+""",
+        encoding="utf-8",
+    )
+
+    findings = LlamaIndexScanner.scan_llamaindex_agents(tmp_path)
+    assert any(f.metadata.get("rule_id") == "MISSING_VECTOR_METADATA_FILTER" for f in findings)
+    assert any(f.type == FindingType.VECTOR_AND_EMBEDDING_WEAKNESS for f in findings)

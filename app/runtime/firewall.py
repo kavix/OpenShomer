@@ -1,6 +1,9 @@
+import re
 import time
 from typing import Any
 from pydantic import BaseModel, Field
+
+from app.frameworks.rag_security import RAGSecurityInspector
 
 
 class FirewallInterception(BaseModel):
@@ -60,3 +63,41 @@ class AIFirewallSidecar:
 
         latency = (time.perf_counter() - start) * 1000
         return FirewallInterception(action="ALLOW", risk_score=0.0, latency_ms=latency)
+
+    def intercept_retrieved_chunk(self, chunk_text: str, source_doc: str = "unknown") -> FirewallInterception:
+        """Evaluates a retrieved RAG chunk before it is unpacked into the LLM context window."""
+        start = time.perf_counter()
+        inspector = RAGSecurityInspector()
+        findings = inspector.inspect_retrieved_chunk(chunk_text, source_doc)
+
+        # 1. Block high-severity context poisoning and credential leaks
+        blocking = [f for f in findings if f.severity in ("HIGH", "CRITICAL")]
+        if blocking:
+            latency = (time.perf_counter() - start) * 1000
+            return FirewallInterception(
+                action="BLOCK",
+                reason=f"DETECTED_CONTEXT_POISONING: {blocking[0].rule_id}",
+                risk_score=1.0 if blocking[0].severity == "CRITICAL" else 0.9,
+                latency_ms=latency,
+            )
+
+        # 2. Escalate medium-severity untrusted context (e.g. XSS payloads)
+        if findings:
+            latency = (time.perf_counter() - start) * 1000
+            return FirewallInterception(
+                action="ESCALATE_HITL",
+                reason=f"DETECTED_UNTRUSTED_CONTEXT: {findings[0].rule_id}",
+                risk_score=0.6,
+                latency_ms=latency,
+            )
+
+        latency = (time.perf_counter() - start) * 1000
+        return FirewallInterception(action="ALLOW", risk_score=0.0, latency_ms=latency)
+
+    def sanitize_retrieved_chunk(self, chunk_text: str, source_doc: str = "unknown") -> str:
+        """Redacts adversarial spans before the chunk is unpacked into the LLM context window."""
+        inspector = RAGSecurityInspector()
+        sanitized = chunk_text
+        for pattern, _rule_id, _severity in inspector.SUSPICIOUS_CHUNK_PATTERNS:
+            sanitized = re.sub(pattern, "[REDACTED_UNTRUSTED_CONTEXT]", sanitized, flags=re.IGNORECASE)
+        return sanitized

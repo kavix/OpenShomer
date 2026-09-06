@@ -50,15 +50,25 @@ class InvestigationAgent:
             root_cause = f"Hardcoded credential or API key found in '{finding.file}'."
             recommended_fix = "Remove hardcoded secret and reference environment variables dynamically."
 
+        elif finding.type == FindingType.VECTOR_AND_EMBEDDING_WEAKNESS:
+            root_cause = (
+                f"Vector retrieval in '{finding.file}' lacks tenant metadata filters "
+                "or uses unbounded top_k, enabling cross-tenant leakage or context flooding."
+            )
+            recommended_fix = (
+                "Attach mandatory tenant_id/user_id metadata filters and cap top_k <= 20."
+            )
+
         else:
             root_cause = f"Configuration vulnerability detected in {finding.file}."
             recommended_fix = "Apply security hardening best practices."
 
         # Check for correlated prompt/tool interactions
-        all_files = self.tools.list_files()
-        for f in all_files:
-            if f.endswith(("system.md", "tools.yaml", "mcp_servers.json")) and f not in affected_files:
-                affected_files.append(f)
+        if finding.type != FindingType.VECTOR_AND_EMBEDDING_WEAKNESS:
+            all_files = self.tools.list_files()
+            for f in all_files:
+                if f.endswith(("system.md", "tools.yaml", "mcp_servers.json")) and f not in affected_files:
+                    affected_files.append(f)
 
         return InvestigationResult(
             finding_id=finding.id,
