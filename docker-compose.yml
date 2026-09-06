@@ -2,18 +2,20 @@ version: '3.8'
 
 services:
   openshomer-api:
-    build: .
+    image: ghcr.io/kavix/openshomer:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: openshomer-api
     ports:
       - "8000:8000"
     environment:
-      - OPENSHOMER_ENV=development
+      - OPENSHOMER_ENV=production
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
       - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
-    volumes:
-      - .:/app
     restart: unless-stopped

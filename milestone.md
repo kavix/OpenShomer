@@ -160,11 +160,12 @@ requirements.txt              ← + docker, PyGithub, requests
 
 | Version | Focus | Details | Status |
 |---|---|---|---|
-| **v0.1 — Core Loop (MVP)** | Prompts, Tools, MCPs, Sandbox & PRs | Single-agent configs, prompt fences, Docker sandbox, evidence PRs, MuleRun, QoderWork, Qoder | **Completed & Released** |
-| **v0.2 — Richer Agent Graphs** | Multi-tool & skill frameworks | Support for LangChain, LlamaIndex, CrewAI, and complex skill definitions. | **Completed & Released** |
-| **v0.3 — Advanced Red-Teaming** | Adaptive adversarial attacks | Multi-turn jailbreaks, indirect prompt injection across tools, and tool-chaining exploits. | *In Design* |
-| **v0.4 — RAG & Memory Security** | Vector store & memory hardening | Permission checks on retrieval stores, sanitization of retrieved context, memory poisoning defense. | *Planned* |
-| **v0.5 — Runtime Feedback Loop** | Live trace ingestion | Ingest production agent traces to detect anomalies and trigger automated remediation. | *Planned* |
+| **v0.1 — Core Loop (MVP)** | Prompts, Tools, MCPs, Sandbox & PRs | Single-agent configs, prompt fences, Docker sandbox, evidence PRs, MuleRun, QoderWork, Qoder | **Completed & Released** ([v0.1.0](https://github.com/kavix/OpenShomer/releases/tag/v0.1.0)) |
+| **v0.2 — Richer Agent Graphs** | Multi-tool & skill frameworks | Support for LangChain, LlamaIndex, CrewAI, MCP server, and OWASP LLM static rules. | **Completed & Released** ([v0.2.0](https://github.com/kavix/OpenShomer/releases/tag/v0.2.0)) |
+| **v0.4 — RAG & Vector Security** | Vector store & memory hardening | Permission checks on retrieval stores, tenant metadata isolation, context sanitization, and AST diffs. | **Completed & Merged** ([PR #104](https://github.com/kavix/OpenShomer/pull/104), closes [#100](https://github.com/kavix/OpenShomer/issues/100)) |
+| **v0.3 — Advanced Red-Teaming** | Adaptive adversarial attacks | Multi-turn crescendo jailbreaks, indirect prompt injection across tools, and tool-chaining exploits. | *Active Development* ([Issue #99](https://github.com/kavix/OpenShomer/issues/99)) |
+| **v0.5 — Runtime Feedback Loop** | Live trace ingestion & AI Firewall | Ingest production agent traces, token firewall sidecar, and cryptographic HITL approval gates. | *Active Development* ([Issue #101](https://github.com/kavix/OpenShomer/issues/101), [#102](https://github.com/kavix/OpenShomer/issues/102)) |
+| **v0.6 — IDE Integration** | Developer Experience & Tooling | Real-time VS Code / JetBrains extension for agent prompt and tool permission linting. | *Planned* ([Issue #103](https://github.com/kavix/OpenShomer/issues/103)) |
 
 ---
 

@@ -130,3 +130,40 @@ flowchart TD
 2. **Deterministic Disposal:** LLM proposals are validated by strict Python guardrails and deterministic regex before entering the sandbox.
 3. **Isolated Test Execution:** Red-team tests run in ephemeral sandbox directories/Docker containers isolated from host credentials.
 4. **Non-Destructive Git Operations:** Patches are committed to isolated security branches; `main` branch is never touched directly.
+
+---
+
+## 🔍 RAG & Vector Store Security Pipeline (v0.4 — PR #104 / Issue #100)
+
+```mermaid
+flowchart TD
+    subgraph INGESTION["1. Document and Chunk Ingestion"]
+        Doc["Raw Document / Web Page / PDF"] --> Splitter["Chunking & Embedding Engine"]
+        Splitter --> Scanner["RAGSecurityInspector.inspect_retrieved_chunk()"]
+    end
+
+    subgraph ANALYSIS["2. Threat Inspection & Guardrails"]
+        Scanner --> CheckInjection{"Contains Indirect Prompt Injection<br/>or Credential Leak?"}
+        CheckInjection -- "Yes" --> Quarantine["Quarantine / Sanitize Chunk<br/>app/runtime/firewall.py"]
+        CheckInjection -- "No" --> SafeEmbedding["Embed & Store in Vector DB"]
+    end
+
+    subgraph RETRIEVAL["3. Vector Query Enforcement"]
+        UserQuery["Retrieval Query Execution"] --> QueryInspector["RAGSecurityInspector.inspect_vector_query_config()"]
+        QueryInspector --> CheckFilter{"Mandatory Tenant Filter & Bounded top_k?"}
+        CheckFilter -- "Missing" --> PatchFilter["Qoder Python AST Rewriter<br/>app/qoder/python_ast.py"]
+        CheckFilter -- "Enforced" --> VectorStore["Safe Vector Store Execution"]
+    end
+
+    style INGESTION fill:#e8f0fe,stroke:#4285f4
+    style ANALYSIS fill:#fef7e0,stroke:#fbbc05
+    style RETRIEVAL fill:#e6f4ea,stroke:#34a853
+```
+
+1. **Retriever AST Inspection (`app/frameworks/langchain.py`, `app/frameworks/llamaindex.py`):**  
+   Scans LangChain `VectorStoreRetriever` (`as_retriever()`) and LlamaIndex `VectorStoreIndex` (`as_query_engine()`, `as_retriever()`) configurations for missing tenant isolation filters and unbounded `top_k` retrieval parameters, emitting `MISSING_VECTOR_METADATA_FILTER`.
+2. **Automated AST Remediation (`app/qoder/python_ast.py`):**  
+   Deterministically parses target Python files using Python's `ast` module to inject parameterized metadata filters (`search_kwargs={"filter": {"tenant_id": tenant_id}, "k": 10}`) and bounded `similarity_top_k` parameters without duplicating AST keyword arguments.
+3. **Runtime In-Flight Chunk Sanitization (`app/runtime/firewall.py`, `app/frameworks/rag_security.py`):**  
+   Intercepts retrieved vector chunks before they are ingested into the LLM context window, sanitizing indirect prompt injections, role-spoofing headers (`system:`, `[INST]`), code execution payloads, and secret leaks.
+

@@ -4,9 +4,32 @@ This guide covers how to install, configure, and run **OpenShomer** for local de
 
 ---
 
-## 1. Quick Installation
+## 1. Quick Installation & Deployment
 
-### Method A: Homebrew (macOS & Linux) — Recommended
+### Method A: Docker Container via GitHub Container Registry (GHCR) — Zero-Install Quickstart
+
+OpenShomer is packaged and published as a multi-arch container (`linux/amd64`, `linux/arm64`) on GitHub Container Registry:
+
+```bash
+# 1. Pull the official image
+docker pull ghcr.io/kavix/openshomer:latest
+
+# 2. Run a zero-config scan on any local directory
+docker run --rm -v $(pwd):/workspace ghcr.io/kavix/openshomer:latest scan /workspace
+
+# 3. Automatically remediate vulnerabilities
+docker run --rm -v $(pwd):/workspace ghcr.io/kavix/openshomer:latest fix /workspace
+
+# 4. Start the interactive SOC terminal interface (TUI)
+docker run --rm -it -v $(pwd):/workspace ghcr.io/kavix/openshomer:latest tui /workspace
+
+# 5. Start the REST API daemon on port 8000
+docker run -d --name openshomer -p 8000:8000 ghcr.io/kavix/openshomer:latest
+```
+
+---
+
+### Method B: Homebrew (macOS & Linux)
 
 ```bash
 # 1. Tap the official OpenShomer repository
@@ -21,19 +44,21 @@ openshomer version
 
 ---
 
-### Method B: From Source (Developers & Contributors)
+### Method C: From Source (Developers & Contributors via `uv`)
 
 ```bash
 # 1. Clone repository
 git clone https://github.com/kavix/OpenShomer.git
 cd OpenShomer
 
-# 2. Create and activate virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# 2. Install dependencies and environment with uv
+uv sync
 
-# 3. Install in editable mode with development dependencies
-pip install -e .
+# 3. Run test suite
+uv run pytest -v
+
+# 4. Run CLI commands
+uv run openshomer --help
 ```
 
 ---

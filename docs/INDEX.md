@@ -38,7 +38,7 @@ graph TD
 
 | Document | Purpose | Target Audience |
 |---|---|---|
-| 📖 **[User & Setup Guide](USER_GUIDE.md)** | Step-by-step installation (`brew`, `uv`, source), GitHub PR automation setup, environment configuration, and CI/CD actions. | Developers, DevOps, SecOps |
+| 📖 **[User & Setup Guide](USER_GUIDE.md)** | Step-by-step installation (Docker/GHCR, `brew`, `uv`, source), GitHub PR automation setup, environment configuration, and CI/CD actions. | Developers, DevOps, SecOps |
 | 💻 **[Terminal UI (TUI) SOC Guide](TUI_GUIDE.md)** | Keyboard shortcuts, interactive dual-pane dashboard, and live telemetry log operational manual. | SOC Analysts, Developers |
 | 💡 **[How It Works](HOW_IT_WORKS.md)** | Conceptual overview of the **Find $\rightarrow$ Investigate $\rightarrow$ Rewrite $\rightarrow$ Red-Team $\rightarrow$ Prove $\rightarrow$ PR** autonomous loop. | General Engineers |
 

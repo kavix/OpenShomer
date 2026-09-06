@@ -11,6 +11,7 @@ OpenShomer discovers risky patterns in AI agent configurations, investigates the
 [![Watch OpenShomer Demo Video](https://img.youtube.com/vi/b9bJ8YaUV3U/maxresdefault.jpg)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)
 
 [![Watch Demo on YouTube](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=b9bJ8YaUV3U)
+[![GHCR Container](https://img.shields.io/badge/Docker%20Image-ghcr.io%2Fkavix%2Fopenshomer-blue?style=for-the-badge&logo=docker)](https://github.com/kavix/OpenShomer/pkgs/container/openshomer)  
 *▶️ Click the player preview above to watch the 3-minute OpenShomer walkthrough demo*
 
 </div>
@@ -355,7 +356,31 @@ Connect OpenShomer directly to **Claude Desktop**, **Claude Code**, **Cursor**, 
 - `redteam_prompt(prompt_text)`: Evaluates system prompts against 26 adversarial prompt injection & leak vectors.
 - `audit_mcp_config(config_json)`: Validates MCP server permissions and checks for hardcoded API keys.
 
-### Quick Start with CLI & TUI
+### 🐳 60-Second Docker Quickstart (GitHub Container Registry)
+
+OpenShomer images are published on [GitHub Container Registry](https://github.com/kavix/OpenShomer/pkgs/container/openshomer) with multi-architecture support (`linux/amd64` and `linux/arm64`). You can run scans, fixes, or launch the service without installing Python:
+
+```bash
+# 1. Pull the official image
+docker pull ghcr.io/kavix/openshomer:latest
+
+# 2. Run a zero-config security scan on any local agent repository
+docker run --rm -v $(pwd):/workspace ghcr.io/kavix/openshomer:latest scan /workspace
+
+# 3. Automatically remediate vulnerabilities and generate safe diffs
+docker run --rm -v $(pwd):/workspace ghcr.io/kavix/openshomer:latest fix /workspace
+
+# 4. Start the interactive SOC Terminal User Interface (TUI)
+docker run --rm -it -v $(pwd):/workspace ghcr.io/kavix/openshomer:latest tui /workspace
+
+# 5. Or launch the FastAPI control plane with Swagger docs on http://localhost:8000
+docker run -d --name openshomer -p 8000:8000 ghcr.io/kavix/openshomer:latest
+
+# 6. Or run with docker compose
+docker compose up -d
+```
+
+### Quick Start with CLI & TUI (Native Python)
 
 ```bash
 # 1. Launch interactive SOC Terminal User Interface (TUI)
@@ -418,13 +443,13 @@ The API will be available at `http://localhost:8000` with interactive Swagger do
 
 ## Roadmap
 
-| Version | Focus                              | Highlights                                      |
-|---------|------------------------------------|-------------------------------------------------|
-| **v0.1**    | Core Loop (MVP)                    | System prompts + tool/MCP configs, basic red-team, GitHub PRs |
-| v0.2    | Richer Agent Graphs                | Multi-tool agents, skill files, LangChain/LlamaIndex support |
-| v0.3    | Advanced Red-Teaming               | Adaptive attackers, multi-turn jailbreaks, tool-chaining attacks |
-| v0.4    | RAG & Memory Security              | Vector store permissions, retrieval prompt hardening |
-| v0.5    | Runtime Feedback Loop              | Ingest live agent traces and close the loop from production |
+| Version | Focus                              | Highlights                                      | Status |
+|---------|------------------------------------|-------------------------------------------------|--------|
+| **v0.1** | Core Loop (MVP)                    | System prompts + tool/MCP configs, basic red-team, GitHub PRs | **Completed & Released** |
+| **v0.2** | Richer Agent Graphs                | Multi-tool agents, skill files, LangChain/LlamaIndex support | **Completed & Released** |
+| **v0.3** | Advanced Red-Teaming               | Adaptive attackers, multi-turn jailbreaks, tool-chaining attacks | *In Progress* |
+| **v0.4** | RAG & Memory Security              | Vector store tenant isolation, retrieval prompt hardening, chunk sanitization ([PR #104](https://github.com/kavix/OpenShomer/pull/104), closes [#100](https://github.com/kavix/OpenShomer/issues/100)) | **Completed & Merged** |
+| **v0.5** | Runtime Feedback Loop              | Ingest live agent traces and close the loop from production | *Planned* |
 
 ---
 
