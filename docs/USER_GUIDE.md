@@ -209,3 +209,14 @@ OpenShomer automatically detects and secures:
 5. **LlamaIndex** (`FunctionTool`, `ReActAgent`)
 6. **CrewAI** (`Agent`, `allow_delegation`)
 7. **Skill Files** (`SKILL.md`, custom agent actions)
+
+---
+
+## 6. Model Context Protocol (MCP) Integration
+
+OpenShomer provides a native FastMCP server enabling real-time scanning and auditing inside IDEs and desktop assistants:
+- **Smithery 1-Click Install**: `npx -y @smithery/cli install @kavix/OpenShomer --client claude`
+- **Zero-Install Python**: `uvx --from git+https://github.com/kavix/OpenShomer.git openshomer-mcp`
+- **Containerized**: `docker run -i --rm ghcr.io/kavix/openshomer:latest mcp`
+
+For complete client configuration files (Claude Desktop, Cursor, Claude Code, Windsurf) and exposed tool specifications, see the **[MCP Server Guide](MCP_GUIDE.md)**.

@@ -115,7 +115,7 @@ graph TD
 | Category | Documentation Guides |
 |---|---|
 | 🗺️ **Hub Index** | 📖 **[Documentation Knowledge Map & Index](docs/INDEX.md)** |
-| 🚀 **Getting Started** | 📖 **[User & Setup Guide (PR & CI/CD Setup)](docs/USER_GUIDE.md)** • 💻 **[Terminal UI (TUI) SOC Guide](docs/TUI_GUIDE.md)** • 💡 **[How It Works](docs/HOW_IT_WORKS.md)** |
+| 🚀 **Getting Started** | 📖 **[User & Setup Guide (PR & CI/CD Setup)](docs/USER_GUIDE.md)** • 🔌 **[MCP Server Guide](docs/MCP_GUIDE.md)** • 💻 **[Terminal UI (TUI) SOC Guide](docs/TUI_GUIDE.md)** • 💡 **[How It Works](docs/HOW_IT_WORKS.md)** |
 | 🏗️ **Architecture & Use Cases** | 🏗️ **[Deep Architecture](docs/ARCHITECTURE.md)** • 📋 **[Use Cases & Flow Scenarios](docs/USE_CASES.md)** |
 | 🧠 **AI Backbones & Integrations** | 🧠 **[Alibaba Cloud & Qwen Security Suite](docs/ALIBABA_QWEN_GUIDE.md)** |
 | 🛡️ **Threat Model & Roadmap** | 🛡️ **[Threat Model](docs/wiki/Threat-Model.md)** • 🛠️ **[Developer Setup](docs/wiki/Developer-Setup.md)** • 🗺️ **[Wiki Roadmap](docs/wiki/Roadmap.md)** |

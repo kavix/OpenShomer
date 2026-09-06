@@ -18,7 +18,8 @@ graph TD
 
     G1 --> U1["• User & Setup Guide (docs/USER_GUIDE.md)"]
     G1 --> U2["• SOC Terminal UI Guide (docs/TUI_GUIDE.md)"]
-    G1 --> U3["• How It Works (docs/HOW_IT_WORKS.md)"]
+    G1 --> U3["• Model Context Protocol (MCP) Guide (docs/MCP_GUIDE.md)"]
+    G1 --> U4["• How It Works (docs/HOW_IT_WORKS.md)"]
 
     G2 --> A1["• Deep Architecture (docs/ARCHITECTURE.md)"]
     G2 --> A2["• Use Cases & Scenarios (docs/USE_CASES.md)"]
@@ -39,6 +40,7 @@ graph TD
 | Document | Purpose | Target Audience |
 |---|---|---|
 | 📖 **[User & Setup Guide](USER_GUIDE.md)** | Step-by-step installation (Docker/GHCR, `brew`, `uv`, source), GitHub PR automation setup, environment configuration, and CI/CD actions. | Developers, DevOps, SecOps |
+| 🔌 **[MCP Server Guide](MCP_GUIDE.md)** | Direct integration for Claude Desktop, Cursor, Claude Code CLI, Windsurf, Smithery, and multi-arch Docker. | AI Engineers, Developers |
 | 💻 **[Terminal UI (TUI) SOC Guide](TUI_GUIDE.md)** | Keyboard shortcuts, interactive dual-pane dashboard, and live telemetry log operational manual. | SOC Analysts, Developers |
 | 💡 **[How It Works](HOW_IT_WORKS.md)** | Conceptual overview of the **Find $\rightarrow$ Investigate $\rightarrow$ Rewrite $\rightarrow$ Red-Team $\rightarrow$ Prove $\rightarrow$ PR** autonomous loop. | General Engineers |
 
