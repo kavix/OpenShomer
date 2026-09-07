@@ -19,7 +19,7 @@ graph TD
         UC1["UC-1: Over-Permissioned Tools & Shell Access"]
         UC2["UC-2: Prompt Injection & Instruction Overriding"]
         UC3["UC-3: MCP Server Permission Scoping"]
-        UC4["UC-4: Missing Human-in-the-Loop (HITL) Gates"]
+        UC4["UC-4: Vector Store Isolation & Context Poisoning"]
         UC5["UC-5: Hardcoded Secrets in System Prompts/Configs"]
         UC6["UC-6: Pre-Merge CI/CD Validation Gate"]
     end
@@ -27,7 +27,7 @@ graph TD
     Dev -->|Configures Agent| UC1
     Dev -->|Authors Prompts| UC2
     Dev -->|Attaches MCPs| UC3
-    Sec -->|Audit & Compliance| UC4
+    Sec -->|Audit RAG Boundaries| UC4
     Scanner -->|Flags Secrets| UC5
     CI -->|Runs Pull Request Check| UC6
 
@@ -126,7 +126,90 @@ graph LR
 
 ---
 
-## Use Case 4: Automated CI/CD Security Gate (UC-6)
+## Use Case 4: Multi-Tenant Vector Store Isolation and Context Poisoning Defense (UC-4)
+
+### Problem
+
+An enterprise support agent serves several customers from one vector store. Its retriever accepts a user question but does not bind the query to the authenticated tenant. A customer can therefore retrieve another tenant's chunks. Poisoned documents can compound the exposure by placing instruction overrides or executable payloads in the retrieved context.
+
+OpenShomer treats the authenticated `tenant_id` as a required query boundary. It reports `MISSING_VECTOR_METADATA_FILTER` when a LangChain or LlamaIndex retrieval call has no `filter` or `where` argument. It also reports `UNBOUNDED_VECTOR_TOP_K` when `top_k`, `similarity_top_k`, or `k` exceeds 50. Retrieved chunks are inspected separately for prompt injection, role impersonation, executable payloads, XSS, and embedded credentials.
+
+### Vulnerable retrieval calls
+
+```python
+# LangChain: every tenant queries the same unfiltered corpus.
+retriever = VectorStoreRetriever(vectorstore=customer_store)
+documents = retriever.vectorstore.similarity_search(question, k=200)
+
+# LlamaIndex: broad retrieval has no tenant constraint.
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine(similarity_top_k=200)
+```
+
+The scanner emits structured telemetry that can flow through the standard finding pipeline:
+
+```json
+{
+  "type": "LLM08_VECTOR_AND_EMBEDDING_WEAKNESS",
+  "rule_id": "MISSING_VECTOR_METADATA_FILTER",
+  "severity": "HIGH",
+  "component": "VectorStoreQuery"
+}
+```
+
+### Synthesized least-privilege diff
+
+The tenant identifier must come from trusted authentication context. The rewrite adds that boundary at each retrieval call and caps retrieval breadth at 10:
+
+```diff
+-retriever = VectorStoreRetriever(vectorstore=customer_store)
+-documents = retriever.vectorstore.similarity_search(question, k=200)
++retriever = VectorStoreRetriever(
++    vectorstore=customer_store,
++    search_kwargs={"filter": {"tenant_id": tenant_id}, "k": 10},
++)
++documents = retriever.vectorstore.similarity_search(
++    question, filter={"tenant_id": tenant_id}, k=10
++)
+
+ index = VectorStoreIndex.from_documents(documents)
+-query_engine = index.as_query_engine(similarity_top_k=200)
++query_engine = index.as_query_engine(
++    vector_store_kwargs={"filter": {"tenant_id": tenant_id}},
++    similarity_top_k=10,
++)
+```
+
+### Detection and remediation flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Authenticated Tenant
+    participant Agent as RAG Agent
+    participant Store as Shared Vector Store
+    participant Shomer as OpenShomer
+
+    Note over User,Store: Before remediation
+    User->>Agent: Ask a customer-specific question
+    Agent->>Store: similarity_search(question, k=200)
+    Store-->>Agent: Cross-tenant or poisoned chunks
+
+    Note over Shomer,Store: Scan and rewrite
+    Shomer->>Shomer: Report missing filter and unbounded top-k
+    Shomer->>Agent: Inject trusted tenant filter and k=10
+
+    Note over User,Store: After remediation
+    Agent->>Store: Query with tenant_id boundary
+    Store-->>Agent: Tenant-scoped chunks
+    Shomer->>Shomer: Inspect chunks before prompt assembly
+```
+
+The resulting patch must still pass syntax compilation and the RAG scanner tests. See [LLM08 in the rule reference](RULES.md#llm08--vector-and-embedding-weaknesses) for the exact detection and remediation contract.
+
+---
+
+## Use Case 6: Automated CI/CD Security Gate (UC-6)
 
 ### Pipeline Interaction
 
