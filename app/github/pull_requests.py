@@ -2,6 +2,8 @@ import os
 import re
 import subprocess
 
+from github import Auth, Github
+
 from app.models.findings import Finding, InvestigationResult, ValidationReport
 
 
@@ -155,8 +157,6 @@ class PullRequestManager:
         if token and target_repo and "/" in target_repo:
             try:
                 import time
-
-                from github import Auth, Github
 
                 g = Github(auth=Auth.Token(token))
                 repo = g.get_repo(target_repo)
