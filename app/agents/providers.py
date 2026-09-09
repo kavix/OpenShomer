@@ -185,7 +185,7 @@ def get_llm_provider(
     api_key: str | None = None,
 ) -> LLMProvider | None:
     """Auto-detects or initializes the requested LLM provider."""
-    name = (provider_name or os.getenv("OPENSHOMER_LLM_PROVIDER", "")).lower()
+    name = (provider_name or os.getenv("OPENSHOMER_LLM_PROVIDER") or "").lower()
 
     if name in ("alibaba", "qwen", "dashscope", "bailian"):
         return AlibabaQwenProvider(api_key=api_key, model=model)

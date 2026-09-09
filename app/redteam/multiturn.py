@@ -21,7 +21,7 @@ class MultiTurnAttackResult(BaseModel):
 class MultiTurnRedTeamSimulator:
     """v0.3 Roadmap: Advanced multi-turn conversational jailbreak & tool-chaining simulator."""
 
-    CRESCENDO_SCENARIOS = [
+    CRESCENDO_SCENARIOS: list[dict[str, Any]] = [
         {
             "name": "Crescendo Shell Privilege Escalation",
             "steps": [
@@ -72,7 +72,7 @@ class MultiTurnRedTeamSimulator:
             steps: list[MultiTurnAttackStep] = scenario["steps"]
             breached = False
             breached_turn = None
-            notes = []
+            notes: list[str] = []
 
             for step in steps:
                 # Deterministic check for escalation turn
