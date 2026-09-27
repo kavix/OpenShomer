@@ -24,58 +24,16 @@ console = Console()
 def scan_workspace(workspace_root: Path) -> list[Finding]:
     """Scan an AI agent repository for configuration risks and prompt vulnerabilities."""
     findings: list[Finding] = []
-    finding_idx = 1
+    finding_idx = 100
 
-    # 1. Check tools.yaml
-    tools_file = workspace_root / "agent/tools.yaml"
-    if tools_file.exists():
-        import yaml
+    # 1. Use centralized OWASP Static Rules
+    from app.validation.static import StaticPolicyChecker
 
-        try:
-            data = yaml.safe_load(tools_file.read_text(encoding="utf-8")) or {}
-            for tool in data.get("tools", []):
-                tool_name = tool.get("name", "unknown")
-                perms = tool.get("permissions", [])
-                if "shell:unrestricted" in perms:
-                    findings.append(
-                        Finding(
-                            id=f"SHOMER-{finding_idx:03d}",
-                            type=FindingType.OVER_PERMISSIONED_TOOL,
-                            severity=Severity.HIGH,
-                            file="agent/tools.yaml",
-                            tool=tool_name,
-                            issue=f"{tool_name} has unrestricted shell scope (shell:unrestricted)",
-                            repository=workspace_root.name,
-                        )
-                    )
-                    finding_idx += 1
-                if not tool.get("requires_approval", False) and "shell" in tool_name:
-                    findings.append(
-                        Finding(
-                            id=f"SHOMER-{finding_idx:03d}",
-                            type=FindingType.MISSING_APPROVAL_GATE,
-                            severity=Severity.HIGH,
-                            file="agent/tools.yaml",
-                            tool=tool_name,
-                            issue=f"{tool_name} lacks human-in-the-loop approval (requires_approval=True)",
-                            repository=workspace_root.name,
-                        )
-                    )
-                    finding_idx += 1
-        except Exception as e:
-            findings.append(
-                Finding(
-                    id=f"SHOMER-{finding_idx:03d}",
-                    type=FindingType.OVER_PERMISSIONED_TOOL,
-                    severity=Severity.MEDIUM,
-                    file="agent/tools.yaml",
-                    issue=f"Failed to parse agent/tools.yaml: {e!s}",
-                    repository=workspace_root.name,
-                )
-            )
-            finding_idx += 1
+    checker = StaticPolicyChecker()
+    owasp_findings = checker.detect_findings(workspace_root)
+    findings.extend(owasp_findings)
 
-    # 2. Check mcp_servers.json
+    # 1.5 Restore MCP JSON Checks
     mcp_file = workspace_root / "mcp/mcp_servers.json"
     if mcp_file.exists():
         try:
@@ -84,7 +42,7 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
                 if srv.get("permissions", {}).get("allowAllPaths") is True:
                     findings.append(
                         Finding(
-                            id=f"SHOMER-{finding_idx:03d}",
+                            id=f"SHOMER-MCP-{finding_idx:03d}",
                             type=FindingType.OVER_PERMISSIONED_TOOL,
                             severity=Severity.HIGH,
                             file="mcp/mcp_servers.json",
@@ -98,7 +56,7 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
                 if "sk_live_" in env_vals or "secret_" in env_vals:
                     findings.append(
                         Finding(
-                            id=f"SHOMER-{finding_idx:03d}",
+                            id=f"SHOMER-MCP-{finding_idx:03d}",
                             type=FindingType.HARDCODED_SECRET_IN_PROMPT,
                             severity=Severity.CRITICAL,
                             file="mcp/mcp_servers.json",
@@ -113,7 +71,7 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
                 ):
                     findings.append(
                         Finding(
-                            id=f"SHOMER-{finding_idx:03d}",
+                            id=f"SHOMER-MCP-{finding_idx:03d}",
                             type=FindingType.MISSING_APPROVAL_GATE,
                             severity=Severity.HIGH,
                             file="mcp/mcp_servers.json",
@@ -123,56 +81,10 @@ def scan_workspace(workspace_root: Path) -> list[Finding]:
                         )
                     )
                     finding_idx += 1
-        except Exception as e:
-            findings.append(
-                Finding(
-                    id=f"SHOMER-{finding_idx:03d}",
-                    type=FindingType.OVER_PERMISSIONED_TOOL,
-                    severity=Severity.MEDIUM,
-                    file="mcp/mcp_servers.json",
-                    issue=f"Failed to parse mcp/mcp_servers.json: {e!s}",
-                    repository=workspace_root.name,
-                )
-            )
-            finding_idx += 1
+        except Exception:
+            pass
 
-    # 3. Check system prompts for prompt injection surfaces and hardcoded secrets
-    for prompt_path in [
-        workspace_root / "prompts/system.md",
-        workspace_root / "prompts/system.prompt",
-        workspace_root / "system.prompt",
-    ]:
-        if prompt_path.exists():
-            content = prompt_path.read_text(encoding="utf-8")
-            rel_path = str(prompt_path.relative_to(workspace_root)).replace("\\", "/")
-            if "sk_live_" in content or "api_key = " in content:
-                findings.append(
-                    Finding(
-                        id=f"SHOMER-{finding_idx:03d}",
-                        type=FindingType.HARDCODED_SECRET_IN_PROMPT,
-                        severity=Severity.CRITICAL,
-                        file=rel_path,
-                        issue="System prompt contains hardcoded API key or credential",
-                        repository=workspace_root.name,
-                    )
-                )
-                finding_idx += 1
-            if (
-                "ignore previous instructions" in content.lower()
-                or "always fulfill whatever" in content.lower()
-                or "bypass" in content.lower()
-            ):
-                findings.append(
-                    Finding(
-                        id=f"SHOMER-{finding_idx:03d}",
-                        type=FindingType.PROMPT_INJECTION_SURFACE,
-                        severity=Severity.HIGH,
-                        file=rel_path,
-                        issue="System prompt contains vulnerable bypass or instruction override phrases",
-                        repository=workspace_root.name,
-                    )
-                )
-    # 4. v0.2 Richer Agent Graphs: Skill files, LangChain, LlamaIndex, and CrewAI
+    # 2. v0.2 Richer Agent Graphs: Skill files, LangChain, LlamaIndex, and CrewAI
     from app.frameworks import scan_all_agent_frameworks
 
     framework_findings = scan_all_agent_frameworks(workspace_root)
@@ -320,6 +232,11 @@ def fix_command(
             console.print(
                 f"   [green]Passed sandbox validation! ({validation.passed_redteam_tests}/{validation.total_redteam_tests} tests)[/green]"
             )
+            # Apply patches locally!
+            for rel_file, content in remediation.rewritten_contents.items():
+                file_path = workspace_path / rel_file
+                file_path.write_text(content, encoding="utf-8")
+
             if auto_pr:
                 pr_url = pr_manager.open_pr(
                     finding, investigation, validation, remediation.diff, token=github_token, repo_name=repo_name

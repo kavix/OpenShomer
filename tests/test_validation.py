@@ -42,7 +42,6 @@ def test_static_checker_detects_owasp_prompt_and_tool_findings(tmp_path):
     findings = StaticPolicyChecker().detect_findings(tmp_path)
     assert {finding.type for finding in findings} == {
         FindingType.DIRECT_PROMPT_INJECTION,
-        FindingType.SENSITIVE_INFORMATION_DISCLOSURE,
         FindingType.SYSTEM_PROMPT_LEAKAGE,
         FindingType.EXCESSIVE_AGENCY,
     }

@@ -17,6 +17,7 @@ class RemediationEngine:
     def remediate(self, investigation: InvestigationResult, finding_type: FindingType) -> RemediationResult:
         modified_files: list[str] = []
         unified_diffs: list[str] = []
+        rewritten_contents: dict[str, str] = {}
 
         for rel_file in investigation.affected_files:
             file_path = self.workspace_root / rel_file
@@ -38,6 +39,7 @@ class RemediationEngine:
                 if diff_lines:
                     unified_diffs.append("".join(diff_lines))
                     modified_files.append(rel_file)
+                    rewritten_contents[rel_file] = rewritten_content
 
         full_diff = "\n".join(unified_diffs)
 
@@ -52,11 +54,40 @@ class RemediationEngine:
             modified_files=modified_files,
             guardrails_passed=is_valid,
             rejection_reason=reason if not is_valid else None,
+            rewritten_contents=rewritten_contents,
         )
 
     def _rewrite_file_content(self, filename: str, content: str, finding_type: FindingType) -> str:
+        from app.models.findings import Finding, Severity
         from app.qoder.diff_synthesizer import DiffSynthesizer
         from app.qoder.ide import QoderIDE
+        from app.validation.owasp_rules import RULE_REGISTRY
+
+        # Route OWASP findings via registry
+        if finding_type in RULE_REGISTRY:
+            dummy_finding = Finding(
+                id="dummy",
+                type=finding_type,
+                severity=Severity.HIGH,
+                file=filename,
+                issue="dummy",
+                repository="dummy",
+                tool=None,
+            )
+            # Find the tool name if this is LLM06 and it's a tools.yaml
+            if finding_type == FindingType.EXCESSIVE_AGENCY and filename.endswith(("tools.yaml", "tools.yml")):
+                import yaml
+
+                try:
+                    data = yaml.safe_load(content)
+                    for tool in data.get("tools", []):
+                        if tool.get("requires_approval") is not True:
+                            dummy_finding.tool = tool.get("name")
+                            break
+                except Exception:
+                    pass
+
+            return RULE_REGISTRY[finding_type].synthesize_patch(dummy_finding, content)
 
         ide = QoderIDE(self.workspace_root)
         res = ide.generate_remediation_diff(filename)

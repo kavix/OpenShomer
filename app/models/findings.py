@@ -75,6 +75,7 @@ class RemediationResult(BaseModel):
     modified_files: list[str]
     guardrails_passed: bool
     rejection_reason: str | None = None
+    rewritten_contents: dict[str, str] = Field(default_factory=dict)
 
 
 class ValidationReport(BaseModel):

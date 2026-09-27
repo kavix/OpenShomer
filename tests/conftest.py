@@ -36,3 +36,11 @@ def mock_github_client():
         github_client = github_class.return_value
         github_client.get_repo.return_value = repository
         yield github_class, github_client, repository
+
+
+@pytest.fixture(autouse=True)
+def restore_demo_agent():
+    import subprocess
+
+    yield
+    subprocess.run(["git", "restore", "demo/vulnerable-agent"], check=False)
