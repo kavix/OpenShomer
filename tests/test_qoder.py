@@ -70,7 +70,7 @@ from langchain_core.vectorstores import VectorStoreRetriever
 retriever = store.as_retriever()
 """
     rewritten = PythonASTSynthesizer.harden_langchain_vector_retriever(source)
-    assert 'search_kwargs={"filter": {"tenant_id": tenant_id}, "k": 10}' in rewritten
+    assert "search_kwargs={'filter': {'tenant_id': tenant_id}, 'k': 10}" in rewritten
 
 
 def test_python_ast_hardens_llamaindex_without_duplicate_kwargs():
@@ -83,7 +83,7 @@ engine = index.as_query_engine(similarity_top_k=8)
     rewritten = PythonASTSynthesizer.harden_llamaindex_vector_index(source)
     assert rewritten.count("similarity_top_k") == 1
     assert "similarity_top_k=8" in rewritten
-    assert 'vector_store_kwargs={"filter": {"tenant_id": tenant_id}}' in rewritten
+    assert "vector_store_kwargs={'filter': {'tenant_id': tenant_id}}" in rewritten
     compile(rewritten, "<hardened>", "exec")
 
 
@@ -98,8 +98,7 @@ retriever = VectorStoreRetriever(
 chunks = store.similarity_search(query)
 """
     rewritten = PythonASTSynthesizer.harden_langchain_vector_retriever(source)
-    assert rewritten.count('filter={"tenant_id": tenant_id}') == 1
-    assert "similarity_search(query,filter=" in rewritten.replace(" ", "")
+    assert "similarity_search(query, filter={'tenant_id': tenant_id}, k=10)" in rewritten
     compile(rewritten, "<hardened>", "exec")
 
 
@@ -111,7 +110,7 @@ index = VectorStoreIndex.from_documents(docs)
 engine = index.as_query_engine()
 """
     rewritten = PythonASTSynthesizer.harden_llamaindex_vector_index(source)
-    assert 'vector_store_kwargs={"filter": {"tenant_id": tenant_id}}' in rewritten
+    assert "vector_store_kwargs={'filter': {'tenant_id': tenant_id}}" in rewritten
     assert "similarity_top_k=10" in rewritten
 
 

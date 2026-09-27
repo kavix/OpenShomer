@@ -67,7 +67,11 @@ The **Remediation Engine** creates a minimal patch:
 - It launches automated adversarial attacks against the rewritten configuration:
   - **Prompt Injection Attack:** Attempts jailbreak and override payloads.
   - **Tool Abuse Attack:** Attempts to trigger unauthorized commands or delete root files.
+  - **RAG Adversarial Suite:** For Vector Stores, it executes cross-tenant NoSQL injections, tests extreme token exhaustion bounds (`top_k=1000`), and verifies chunks are scrubbed of invisible Unicode/XML breakouts and credentials.
 - **Pass Rule:** The patch is only accepted if **100% of adversarial attacks are blocked**.
+
+*Note: You can manually run the RAG Adversarial Red-Team suite locally at any time using:*
+`uv run pytest redteam/test_rag_adversarial.py -v`
 
 ---
 

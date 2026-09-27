@@ -51,7 +51,7 @@ dev = [
 package = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "demo/vulnerable-agent/tests"]
+testpaths = ["tests", "demo/vulnerable-agent/tests", "redteam"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 markers = [

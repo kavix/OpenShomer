@@ -19,7 +19,8 @@ class RAGSecurityInspector:
     """v0.4 Roadmap: Security inspector for RAG retrieval pipelines and Vector Stores."""
 
     SUSPICIOUS_CHUNK_PATTERNS = [
-        (r"ignore\s+(?:all\s+)?previous\s+instructions", "PROMPT_INJECTION_IN_RETRIEVAL", "HIGH"),
+        # Original patterns with homoglyph protection
+        (r"ign[oо0]r[eе3]\s+(?:all\s+)?previ[oо0]us\s+instructions", "PROMPT_INJECTION_IN_RETRIEVAL", "HIGH"),
         (r"system\s*:\s*you\s+are\s+now", "SYSTEM_ROLE_IMPERSONATION_IN_CHUNK", "CRITICAL"),
         (r"eval\(|exec\(|subprocess\.Popen", "CODE_EXECUTION_PAYLOAD_IN_CHUNK", "HIGH"),
         (r"<script[\s>]|javascript:", "XSS_PAYLOAD_IN_CONTEXT", "MEDIUM"),
@@ -28,13 +29,34 @@ class RAGSecurityInspector:
             "CREDENTIAL_LEAK_IN_EMBEDDINGS",
             "CRITICAL",
         ),
+        # Fortified: XML / Markdown Context Breakouts
+        (r"<\s*/\s*(?:context|document|text|data|retrieved_data)\s*>", "CONTEXT_BOUNDARY_BREAKOUT", "CRITICAL"),
+        (r"---\s*(?:SYSTEM|INSTRUCTION|ROLE)\s*---", "MARKDOWN_BOUNDARY_BREAKOUT", "HIGH"),
+        # Fortified: Multilingual Injections
+        (r"ignora las instrucciones", "PROMPT_INJECTION_IN_RETRIEVAL_ES", "HIGH"),
+        (r"ignorer les instructions", "PROMPT_INJECTION_IN_RETRIEVAL_FR", "HIGH"),
     ]
+
+    @staticmethod
+    def _normalize_chunk(text: str) -> str:
+        import unicodedata
+
+        # 1. Fold visual homoglyphs and canonicalize spacing (NFKC)
+        normalized = unicodedata.normalize("NFKC", text)
+
+        # 2. Filter out dangerous Unicode categories:
+        # 'Mn': Mark, Nonspacing (Combining characters, accents)
+        # 'Cf': Other, Format (Zero-width spaces, Bidi overrides, Soft hyphens)
+        # 'Cc': Other, Control (ANSI escapes, raw control chars)
+        return "".join(c for c in normalized if unicodedata.category(c) not in ("Mn", "Cf", "Cc"))
 
     def inspect_retrieved_chunk(self, chunk_text: str, source_doc: str = "unknown") -> list[RAGSecurityFinding]:
         """Inspects retrieved context chunks for indirect prompt injection or context poisoning."""
         findings: list[RAGSecurityFinding] = []
+        normalized_chunk = self._normalize_chunk(chunk_text)
+
         for pattern, rule_id, severity in self.SUSPICIOUS_CHUNK_PATTERNS:
-            if re.search(pattern, chunk_text, re.IGNORECASE):
+            if re.search(pattern, normalized_chunk, re.IGNORECASE):
                 findings.append(
                     RAGSecurityFinding(
                         rule_id=rule_id,
